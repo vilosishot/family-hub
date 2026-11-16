@@ -839,7 +839,7 @@ function vSched(){
   const unmatched = loose.filter(e => !cfg().people.some(p => (e.title+' '+(e.desc||'')).toLowerCase().includes(p.name.toLowerCase())));
   return `<div class="bar"><h1 class="title" style="margin-right:6px">Schedules</h1>
       ${[1,2,3,4,5,6,0].map(d=>`<button class="pill ${U.day===d?'on':''}" data-a="day" data-d="${d}">${DOWL[d].slice(0,3)}${d===t.getDay()?' •':''}</button>`).join('')}</div>
-    <div class="banner">Tap a block to change it, or "+ Add". Schedules are copied to the <b>Family Hub</b> Google Calendar as repeating events (chores stay in the app). Changes made there show up here.${remote==='local'?' (Google isn\'t connected on this copy.)':''}</div>
+    <div class="banner">Tap a block to change it, or "+ Add". Google Calendar copying is paused for now.${remote==='local'?' (Google isn\'t connected on this copy.)':''}</div>
     ${unmatched.length?`<div class="box" style="margin:0 0 12px"><h2 style="font-size:18px">Family calendar · ${DOWL[U.day]}</h2>${unmatched.map(e=>`<div class="hint">📅 ${fmtT(hmOf(e.start))} ${esc(e.title)}</div>`).join('')}</div>`:''}
     <div class="tl" style="--n:${ps.length}"><div style="position:relative;height:${H}px">${hrs}</div>${cols}</div>`;
 }
