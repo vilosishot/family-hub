@@ -64,6 +64,23 @@ textarea{height:70px;padding:10px 12px}
 .ring .c:after{content:'';position:absolute;inset:4px;border-radius:50%;background:var(--tint)}
 .ring .c span{position:relative;z-index:1}
 .ring.on{color:var(--ink)} .ring.on .c{box-shadow:0 0 0 2px var(--c)}
+.days{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:0 0 14px}
+.days .pill{height:44px;flex-direction:column;gap:0;line-height:1.05;padding:0 12px;font-size:12px}
+.days .pill b{font-size:16px}
+.plan{margin:10px 2px 4px;border-radius:16px;background:var(--card);padding:8px 12px}
+.plan .r{display:flex;gap:8px;font-size:13px;font-weight:800;padding:4px 0;border-top:1px solid var(--line)} .plan .r:first-child{border-top:0}
+.plan .r .tm{width:66px;flex:none;color:var(--muted)} .plan .r.now{color:var(--c)} .plan .r.gc{color:var(--muted)}
+.ck[disabled]{opacity:.35}
+.play{margin:10px 2px 6px;border-radius:18px;background:var(--card);padding:12px 14px;box-shadow:var(--shadow)}
+.play .pt{display:flex;align-items:center;gap:10px;font-family:var(--serif);font-size:22px}
+.play .pt .em{font-size:28px} .play .pt small{margin-left:auto;font-family:var(--sans);font-size:14px;font-weight:800;color:var(--muted)}
+.play .pbar{height:26px;border-radius:13px;background:var(--chip);overflow:hidden;margin:10px 0 8px;position:relative}
+.play .pbar i{display:block;height:100%;background:var(--c);border-radius:13px;transition:width .5s}
+.play .pbar span{position:absolute;inset:0;display:grid;place-items:center;font-weight:800;font-size:13px}
+.play.open{background:color-mix(in srgb,var(--good) 14%,var(--card))} .play.open .pbar i{background:var(--good)}
+.privs{display:flex;gap:6px;flex-wrap:wrap}
+.priv{font-size:12.5px;font-weight:800;border-radius:12px;padding:5px 9px;background:var(--chip);color:var(--muted)}
+.priv.on{background:color-mix(in srgb,var(--good) 20%,var(--card));color:var(--good)} .priv.no{background:color-mix(in srgb,var(--bad) 16%,var(--card));color:var(--bad)}
 .gate{margin:8px 2px 4px;border-radius:14px;background:var(--card);padding:9px 12px;font-weight:800;font-size:14px;color:var(--muted)}
 .gate.open{color:var(--good);background:color-mix(in srgb,var(--good) 15%,var(--card))}
 .wkbar{margin:8px 4px 0;font-size:12px;font-weight:800;color:var(--muted)}
@@ -319,7 +336,7 @@ LIBRARY.forEach(c => { c.cat = c.cat || '';
   }
   if (!c.assign.length) c.pool = true;
 });
-let sN = 0; const B = (who, start, end, title, emoji, days=[1,2,3,4,5]) => ({id:'s'+(++sN), who, start, end, title, emoji, days, color:''});
+let sN = 0; const B = (who, start, end, title, emoji, days=[1,2,3,4,5]) => ({id:'b'+(++sN), who, start, end, title, emoji, days, color:'', kind:''});
 const WE=[0,6], ALL=[0,1,2,3,4,5,6], FAM=['reiden','ender','chelsea','victor'];
 const DEFAULTS = {
   people: [
@@ -330,14 +347,28 @@ const DEFAULTS = {
   ],
   chores: LAUNDRY.concat(LIBRARY),
   sched: [
-    B(['reiden','ender'],'06:45','07:30','Morning list','☀️'), B(FAM,'07:30','07:50','Breakfast','🥣'),
-    B(['ender'],'08:05','15:15','School','🏫'), B(['reiden'],'08:05','15:15','Preschool / home','🧩'),
-    B(['reiden','ender'],'15:15','15:45','Snack & after-school list','🍎'), B(['ender'],'15:45','16:05','Reading','📚'), B(['reiden'],'15:45','16:05','Book time','📖'),
-    B(['reiden','ender'],'16:05','17:15','Outside play','🌳'), B(['reiden','ender'],'17:15','17:45','Games (if unlocked)','🎮'),
-    B(FAM,'18:00','18:40','Family dinner','🍝',ALL), B(['reiden','ender'],'19:00','19:30','Bath & teeth','🛁',ALL),
-    B(['reiden'],'19:45','20:00','Lights out','💤',ALL), B(['ender'],'19:45','20:30','Read in bed, lights out','🔦',ALL),
-    B(FAM,'09:00','10:00','Weekend chores','🧹',WE), B(['reiden','ender'],'10:00','12:00','Outside & adventures','🌳',WE),
-    B(FAM,'18:45','19:00','Family meeting & payday','💰',[0]),
+    // ----- school days -----
+    B(['reiden','ender'],'06:30','07:10','Morning list','☀️'), B(FAM,'07:10','07:30','Breakfast','🥣'), B(['reiden','ender'],'07:30','07:40','Shoes, coat & backpack','🎒'),
+    B(['ender'],'07:40','08:00','Ride to school with Dad','🚗'), B(['ender'],'08:00','15:00','School','🏫'),
+    B(['reiden'],'07:40','08:15','Ride to daycare with Dad','🚗'), B(['reiden'],'08:15','14:45','Daycare','🧩'),
+    B(['reiden'],'14:45','15:15','Pickup & ride home','🚗'), B(['ender'],'15:00','15:15','Pickup & ride home','🚗'),
+    B(['victor'],'07:40','08:30','Drop-offs: Ender 8:00, ReiRei 8:15','🚗'), B(['victor'],'08:30','14:30','Work','💼'),
+    B(['victor'],'14:30','15:15','Pickups: ReiRei 2:45, Ender 3:00','🚗'), B(['victor'],'15:15','18:30','Work from home','💻'),
+    B(['chelsea'],'07:30','08:00','Drive to work','🚗'), B(['chelsea'],'08:00','17:30','Work','💼'), B(['chelsea'],'17:30','18:00','Drive home','🚗'),
+    B(['reiden','ender'],'15:15','15:30','Snack','🍎'),
+    Object.assign(B(['ender'],'15:30','16:00','Homework & reading','📚'),{kind:'homework'}), Object.assign(B(['reiden'],'15:30','15:50','Book time & quiet learning','📖'),{kind:'homework'}),
+    Object.assign(B(['reiden','ender'],'16:00','16:45','Chores','🧹'),{kind:'chores'}),
+    Object.assign(B(['reiden','ender'],'16:45','18:30','Playtime (if earned)','🎉'),{kind:'playtime'}),
+    B(FAM,'18:30','19:00','Family dinner','🍝'), B(['reiden','ender'],'19:00','19:30','Bath, pajamas & teeth','🛁'), B(['reiden','ender'],'19:30','19:45','Bedtime story','📖'),
+    B(['reiden'],'19:45','20:00','Lights out','💤'), B(['ender'],'19:45','20:15','Read in bed, lights out','🔦'),
+    // ----- weekends -----
+    B(['reiden','ender'],'07:30','08:15','Wake up & morning list','☀️',WE), B(FAM,'08:15','09:00','Family breakfast','🥞',WE),
+    Object.assign(B(FAM,'09:00','10:00','Weekend chores','🧹',WE),{kind:'chores'}), B(['reiden','ender'],'10:00','12:00','Outside & adventures','🌳',WE),
+    B(FAM,'12:00','12:45','Lunch','🥪',WE), Object.assign(B(['reiden','ender'],'12:45','13:30','Quiet time: books & puzzles','📚',WE),{kind:'homework'}),
+    Object.assign(B(['reiden','ender'],'13:30','17:00','Playtime (if earned)','🎉',WE),{kind:'playtime'}),
+    B(FAM,'17:15','18:00','Help make dinner','🍳',WE), B(FAM,'18:00','18:45','Family dinner','🍝',WE), B(FAM,'18:45','19:00','Family meeting & payday','💰',[0]),
+    B(['reiden','ender'],'19:00','19:30','Bath, pajamas & teeth','🛁',WE), B(['reiden','ender'],'19:30','19:45','Bedtime story','📖',WE),
+    B(['reiden'],'19:45','20:00','Lights out','💤',WE), B(['ender'],'19:45','20:30','Read in bed, lights out','🔦',WE),
   ],
   rewards: [
     {id:'r1',emoji:'🎮',title:'15 extra minutes of games',cost:10,cash:'',active:true},{id:'r2',emoji:'🍨',title:"Pick tonight's dessert",cost:15,cash:'',active:true},
@@ -347,14 +378,14 @@ const DEFAULTS = {
     {id:'r9',emoji:'🏕️',title:'Friend playdate or sleepover',cost:80,cash:'',active:true},{id:'r10',emoji:'🧸',title:'Small toy or book (up to $5)',cost:50,cash:'',active:true},
     {id:'r11',emoji:'🎉',title:'YES DAY!',cost:200,cash:'',active:true},
   ],
-  settings: {pin:'8057', cards:'big', allowancePerYear:1, tiers:[{min:90,pay:100},{min:75,pay:75},{min:50,pay:50},{min:0,pay:25}], jars:{spend:50,save:40,give:10}, matchPct:10, fullDayBonus:2, streakDays:7, streakBonus:10, gateSlots:['morning','afternoon'], calendarNames:'', shareEmails:'', startDate:'', sound:true, starsPerDollar:10, demeritCap:15, libVersion:6},
+  settings: {pin:'8057', cards:'big', allowancePerYear:1, tiers:[{min:90,pay:100},{min:75,pay:75},{min:50,pay:50},{min:0,pay:25}], jars:{spend:50,save:40,give:10}, matchPct:10, fullDayBonus:2, streakDays:7, streakBonus:10, gateSlots:['morning','afternoon'], calendarNames:'', shareEmails:'', startDate:'', sound:true, starsPerDollar:10, demeritCap:15, libVersion:7},
 };
 
 // ---------- state ----------
 const LS = 'familyhub.v3', DEV = 'familyhub.device';
 let S = {config:null, log:[], outbox:[], events:[], calUrl:'', calError:''};
 let DV = Object.assign({theme:'light', me:'', lastChoreSync:''}, JSON.parse(localStorage.getItem(DEV)||'{}'));
-const U = {view:'today', who:'all', ring:{}, lib:'all', libStatus:'all', day:new Date().getDay(), ptab:'chores', parentUntil:0};
+const U = {q:'', sort:'group', off:0, plan:false, view:'today', who:'all', ring:{}, lib:'all', libStatus:'all', day:new Date().getDay(), ptab:'chores', parentUntil:0};
 let D = null, remote = 'local';
 const $ = s => document.querySelector(s);
 const esc = s => String(s??'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -422,10 +453,20 @@ const isPool = c => status(c)==='pool';
 
 // ---------- history → current state ----------
 const key = (d,p,c) => `${d}|${p}|${c}`;
+const PRIVS = [['friends','👫','Friends'],['games','🎮','Video games'],['screen','📺','Screen time']];
+function groundsFor(pid){ const t = TODAY(), out = {}; (D.grounds||[]).forEach(g => { if (g.kid!==pid || g.lifted || (g.until && g.until < t)) return; g.items.forEach(i => { if (!out[i] || (out[i].until && (!g.until || g.until > out[i].until))) out[i] = g; }); }); return out; }
+const untilText = u => !u ? 'until lifted' : u===TODAY() ? 'today' : 'until ' + pd(u).toLocaleDateString([], {weekday:'short', month:'short', day:'numeric'});
+function playtime(p, list){
+  const gl = list.filter(x => arr(ST().gateSlots).includes(x.g)), done = gl.filter(x=>x.d).length, open = done === gl.length, g = groundsFor(p.id), pct = gl.length ? done/gl.length*100 : 100;
+  const privs = PRIVS.map(([k,e,l]) => g[k] ? `<span class="priv no" title="${esc(g[k].reason||'')}">⛔ ${e} ${l} · grounded ${untilText(g[k].until)}</span>` : `<span class="priv ${open?'on':''}">${open?'🔓':'🔒'} ${e} ${l}</span>`).join('');
+  const allGrounded = PRIVS.every(([k]) => g[k]);
+  return `<div class="play ${open && !allGrounded ? 'open' : ''}"><div class="pt"><span class="em">${allGrounded?'⛔':open?'🎉':'🔒'}</span>Playtime<small>${open ? (allGrounded?'Chores done · grounded':'Unlocked!') : `${gl.length-done} more to go`}</small></div>
+    <div class="pbar"><i style="width:${pct}%"></i><span>${done} / ${gl.length} chores</span></div><div class="privs">${privs}</div></div>`;
+}
 function derive(){
   const st = {}; for (const e of S.log) if (e.type==='approve'||e.type==='reject') st[e.ref] = e.type;
   const evs = [...S.log].sort((a,b) => String(a.ts).localeCompare(String(b.ts)));
-  const d = {done:new Set(), pool:{}, stars:{}, jars:{}, pending:[], extraCount:{}, paid:{}, bonus:{}, lastDone:{}, status:st, history:[]};
+  const d = {grounds:[], done:new Set(), pool:{}, stars:{}, jars:{}, pending:[], extraCount:{}, paid:{}, bonus:{}, lastDone:{}, status:st, history:[]};
   const ensure = k => { if (!(k in d.stars)){ d.stars[k]=0; d.jars[k]={spend:0,save:0,give:0}; } };
   cfg().people.forEach(p => ensure(p.id));
   for (const e of evs){
@@ -443,8 +484,10 @@ function derive(){
       case 'demerit': d.stars[k] = Math.max(0, d.stars[k]-Math.abs(s)); break;
       case 'jar': if (e.jar in d.jars[k]) d.jars[k][e.jar] = Math.round((d.jars[k][e.jar]+(Number(e.money)||0))*100)/100; break;
       case 'payday': d.paid[k+'|'+e.ref] = e; break;
+      case 'ground': d.grounds.push({id:e.id, kid:k, items:String(e.ref).split(',').filter(Boolean), until:e.note||'', reason:e.title, ts:e.ts}); break;
+      case 'unground': { const g = d.grounds.find(x=>x.id===e.ref); if (g) g.lifted = true; break; }
     }
-    if (['extra','redeem','bonus','demerit','payday','jar','pooldone'].includes(e.type)) d.history.push(e);
+    if (['extra','redeem','bonus','demerit','payday','jar','pooldone','ground','unground'].includes(e.type)) d.history.push(e);
   }
   return d;
 }
@@ -513,7 +556,8 @@ async function pull(first){
         S.config.chores = JSON.parse(JSON.stringify(LAUNDRY.filter(c=>!have.has(c.id)))).concat(cfg().chores); normalize(S.config); ST().libVersion = 5; }
       if ((Number(ST().libVersion)||1) < 6){ const old = ['l1','l2','l3','l4','l5','l6','l7','l8','l9','l10','l11','l12'];
         const have = new Set(cfg().chores.map(c=>c.id)); S.config.chores = JSON.parse(JSON.stringify(LAUNDRY.filter(c=>!have.has(c.id)))).concat(cfg().chores.filter(c=>!old.includes(c.id)));
-        normalize(S.config); ST().libVersion = 6; setTimeout(() => saveConfig('Laundry days updated'), 1200); } }
+        normalize(S.config); ST().libVersion = 6; setTimeout(() => saveConfig('Laundry days updated'), 1200); }
+      if ((Number(ST().libVersion)||1) < 7){ S.config.sched = JSON.parse(JSON.stringify(DEFAULTS.sched)); normalize(S.config); ST().libVersion = 7; DV.lastChoreSync = ''; saveDev(); setTimeout(() => saveConfig('New daily schedule saved'), 1500); } }
     else if (first){ D = derive(); await call('apiSaveConfig', S.config, choreEvents()); DV.lastChoreSync = TODAY(); saveDev(); }
     const ids = new Set((j.log||[]).map(e=>e.id));
     S.log = (j.log||[]).concat(S.outbox.filter(e=>!ids.has(e.id)));
@@ -536,7 +580,8 @@ function saveConfig(msg){
     .catch(e => { syncDot('err'); toast("Saved here, but couldn't reach Google: "+(e.message||e)); });
 }
 /** The next 4 weeks of non-daily chores, for the Family Hub calendar. */
-function choreEvents(){
+function choreEvents(){ return []; }   // chores stay in the app; only schedules go to Google Calendar
+function choreEventsUnused(){
   const out = [], t = pd(TODAY());
   for (let i=0;i<28;i++){ const d = addDays(t,i), ds = ymd(d);
     for (const c of cfg().chores){
@@ -573,69 +618,106 @@ function render(){
 const shown = () => cfg().people.filter(p => U.who==='all' || U.who===p.id);
 const GROUPS = [['morning','🌤️','Morning'],['afternoon','☀️','Afternoon'],['evening','🌙','Evening'],['chores','🧹','Chores']];
 
+function dayStrip(){
+  const start = Math.floor((U.off + 1) / 7) * 7 - 1;          // yesterday + the next 6 days, then page by week
+  const cells = [0,1,2,3,4,5,6].map(i => { const off = start + i, d = addDays(now(), off);
+    return `<button class="pill ${U.off===off?'on':''}" data-a="off" data-n="${off}">${off===0?'Today':DOWL[d.getDay()].slice(0,3)}<b>${d.getDate()}</b></button>`; }).join('');
+  return `<div class="days"><button class="pill" data-a="off" data-n="${U.off-7}">◀</button>${cells}<button class="pill" data-a="off" data-n="${U.off+7}">▶</button>
+    ${U.off?`<button class="btn sm" data-a="off" data-n="0">Back to today</button>`:''}<button class="pill ${U.plan||U.off?'on':''}" style="margin-left:auto;flex-direction:row;font-size:14px" data-a="plan">🗓 Day plan</button></div>`;
+}
 function vToday(){
-  const ps = shown(), t = now(), ds = TODAY();
+  const ps = shown(), t = addDays(now(), U.off), ds = ymd(t), isToday = U.off===0, future = U.off > 0;
   const cols = ps.map(p => {
     const list = listFor(p, t), nd = list.filter(x=>x.d).length, sel = U.ring[p.id];
     const rings = GROUPS.map(([g,i,l]) => { const l2 = list.filter(x=>x.g===g), pc = l2.length ? l2.filter(x=>x.d).length/l2.length*100 : 0;
       return `<button class="ring ${sel===g?'on':''}" data-a="ring" data-p="${p.id}" data-g="${g}"><span class="c" style="--pc:${pc}"><span>${i}</span></span>${l}</button>`; }).join('');
-    const gl = list.filter(x => arr(ST().gateSlots).includes(x.g) && !x.d).length;
-    const gate = p.kid && list.length ? `<div class="gate ${gl?'':'open'}">${gl?`🔒 Friends & games: ${gl} more to go`:'🔓 Friends & games unlocked!'}</div>` : '';
+    const gate = p.kid && isToday ? playtime(p, list) : '';
+    const nowHM = `${pad(now().getHours())}:${pad(now().getMinutes())}`;
+    const plan = (U.plan || !isToday) ? `<div class="plan">${dayBlocks(p, t).map(b => `<div class="r ${b.google?'gc':''} ${isToday && b.start<=nowHM && nowHM<b.end?'now':''}"><span class="tm">${fmtT(b.start)}</span><span>${b.emoji} ${esc(b.title)}</span></div>`).join('') || '<div class="hint">Nothing scheduled.</div>'}</div>` : '';
     const w = p.kid ? weekStats(p, weekStart(t)) : null;
     const wk = w && w.possible ? `<div class="wkbar">This week: ${w.earned}/${w.possible} points (${w.pct}%) · allowance ${money(baseAllowance(p,t))}<div class="b"><i style="width:${w.pct}%"></i></div></div>` : '';
     const secs = GROUPS.filter(([g]) => !sel || sel===g).map(([g,,l]) => {
       const items = list.filter(x=>x.g===g); if (!items.length) return '';
       const big = p.kid && ST().cards==='big' && g!=='chores';
       return `<div class="sec">${l}<small>${items.filter(x=>x.d).length}/${items.length}</small></div>` + items.map(({c,d,pool}) => {
-        const chk = pool ? `data-a="pooldone" data-c="${c.id}" data-p="${p.id}"` : `data-a="tick" data-c="${c.id}" data-p="${p.id}"`;
+        const chk = future ? 'disabled title="Not today yet"' : (pool ? `data-a="pooldone" data-c="${c.id}" data-p="${p.id}" data-date="${ds}"` : `data-a="tick" data-c="${c.id}" data-p="${p.id}" data-date="${ds}"`);
         const det = `data-a="details" data-c="${c.id}" data-p="${p.id}"`;
         const pay = p.kid && Number(c.points) && !pool ? `<span class="st" title="Counts toward allowance">💰 ${c.points}</span>` : '';
         return big ? `<div class="card ${d?'done':''}"><button class="pic" ${det}>${c.emoji}</button><div class="bot"><button class="t" ${det}>${esc(c.title)}</button>${pay}<button class="ck" ${chk} aria-label="Done">✓</button></div></div>`
                    : `<div class="rowt ${d?'done':''}"><span class="e">${c.emoji}</span><button class="t" ${det}>${esc(c.title)}${pool?'<small>Took it today</small>':c.freq!=='daily'?`<small>${esc(repeatText(c).split(' · ')[0])}</small>`:''}</button>${pay}<button class="ck" ${chk} aria-label="Done">✓</button></div>`;
       }).join('');
     }).join('');
-    const empty = !list.length ? `<div class="empty">${p.kid?`Nothing on ${esc(p.name)}'s list today.`:`Nothing on your list. Take something from <b>Family chores</b> below.`}</div>` : '';
+    const empty = !list.length ? `<div class="empty">${p.kid?`Nothing on ${esc(p.name)}'s list ${isToday?'today':'this day'}.`:`Nothing on your list. Take something from <b>Family chores</b> below.`}</div>` : '';
     return `<section ${pvx(p,'col')}><div class="ph"><button class="av" data-a="color" data-p="${p.id}" title="Change color">${ini(p)}<span class="pal">🎨</span></button><div><div class="nm">${esc(p.name)}</div><div class="row"><span class="prog"><i style="width:${list.length?nd/list.length*100:0}%"></i><span>${nd}/${list.length}</span></span>${p.kid?`<span class="stars">⭐ ${D.stars[p.id]||0}</span>`:''}</div></div></div>
-      ${wk}${list.length?`<div class="rings">${rings}</div>`:''}${gate}${secs}${empty}</section>`;
+      ${gate}${plan}${isToday?wk:''}${list.length?`<div class="rings">${rings}</div>`:''}${secs}${empty}</section>`;
   }).join('');
   const poolToday = cfg().chores.filter(c => isPool(c) && c.freq!=='extra' && (occurs(c,t) || (c.freq==='asneeded' && (!arr(c.months).length || arr(c.months).includes(t.getMonth()+1)))));
   const pcard = c => { const k = D.pool[ds+'|'+c.id] || {}, tk = k.taker && P(k.taker), db = k.doneBy && P(k.doneBy);
     return `<div ${tk?pvx(tk,'pc taken'+(db?' fin':'')):'class="pc"'}><button class="top" data-a="details" data-c="${c.id}"><span class="e">${c.emoji}</span><span class="t">${esc(c.title)}<small>${c.freq==='asneeded'?'As needed':(c.time?fmtT(c.time):SLOTS[c.slot][1])}${c.how?' · '+esc(c.how):''}</small></span></button>
-      ${db?`<div class="who">✓ Done by <span ${pvx(db,'av s')}>${ini(db)}</span>${esc(db.name)}<button class="btn light sm" style="margin-left:auto" data-a="poolundo" data-c="${c.id}">Undo</button></div>`
-        : tk?`<div class="who"><span ${pvx(tk,'av s')}>${ini(tk)}</span>${esc(tk.name)} is on it<span style="margin-left:auto;display:flex;gap:6px"><button class="btn light sm" data-a="release" data-c="${c.id}">Let go</button><button class="btn sm" data-a="pooldone" data-c="${c.id}" data-p="${tk.id}">Done ✓</button></span></div>`
-        : `<div class="acts"><button class="btn light sm" data-a="pick" data-c="${c.id}" data-m="take">✋ I'll take it</button><button class="btn sm" data-a="pick" data-c="${c.id}" data-m="done">✓ Done by…</button></div>`}</div>`; };
+      ${db?`<div class="who">✓ Done by <span ${pvx(db,'av s')}>${ini(db)}</span>${esc(db.name)}<button class="btn light sm" style="margin-left:auto" data-a="poolundo" data-c="${c.id}" data-date="${ds}">Undo</button></div>`
+        : tk?`<div class="who"><span ${pvx(tk,'av s')}>${ini(tk)}</span>${esc(tk.name)} is on it<span style="margin-left:auto;display:flex;gap:6px"><button class="btn light sm" data-a="release" data-c="${c.id}" data-date="${ds}">Let go</button><button class="btn sm" data-a="pooldone" data-c="${c.id}" data-p="${tk.id}" data-date="${ds}">Done ✓</button></span></div>`
+        : future ? `<div class="hint">Coming up ${DOWL[t.getDay()]}</div>` : `<div class="acts"><button class="btn light sm" data-a="pick" data-c="${c.id}" data-m="take" data-date="${ds}">✋ I'll take it</button><button class="btn sm" data-a="pick" data-c="${c.id}" data-m="done" data-date="${ds}">✓ Done by…</button></div>`}</div>`; };
   const extras = cfg().chores.filter(c => c.freq==='extra' && status(c)!=='off' && c.active && (!arr(c.months).length || arr(c.months).includes(t.getMonth()+1)));
   const kids = cfg().people.filter(p=>p.kid);
   const xcard = c => `<div class="pc"><div class="top"><span class="e">${c.emoji}</span><span class="t">${esc(c.title)}<small>☆ ${c.points} stars</small></span></div><div class="acts">${kids.map(k=>{const n=D.extraCount[key(ds,k.id,c.id)]||0;return `<button ${pvx(k,'btn sm'+(n?' light':''))} style="${n?'':'background:var(--c);color:#fff'}" data-a="extra" data-c="${c.id}" data-p="${k.id}">${n?'✓ ':''}${esc(k.name)}</button>`;}).join('')}</div></div>`;
   const lt = cfg().chores.filter(c => c.cat==='laundry' && c.freq!=='extra' && status(c)!=='off' && occurs(c,t));
   const lstate = c => isPool(c) ? !!(D.pool[ds+'|'+c.id]||{}).doneBy : arr(c.assign).every(id => D.done.has(key(ds,id,c.id)));
-  const laundry = lt.length ? `<div class="box" style="margin:0 0 16px;border:2px solid var(--accent)"><h2>🧺 Laundry today <span class="hint">${lt.filter(lstate).length}/${lt.length} done</span></h2>
+  const laundry = lt.length ? `<div class="box" style="margin:0 0 16px;border:2px solid var(--accent)"><h2>🧺 Laundry ${isToday?'today':DOWL[t.getDay()]} <span class="hint">${lt.filter(lstate).length}/${lt.length} done</span></h2>
     <div class="chips" style="margin-top:10px">${lt.map(c => { const who = arr(c.assign).map(P).filter(Boolean), q = who[0] || (D.pool[ds+'|'+c.id]?.taker && P(D.pool[ds+'|'+c.id].taker));
-      return `<button ${q?pvx(q,'pill'+(lstate(c)?' on':'')):`class="pill ${lstate(c)?'on':''}"`} data-a="details" data-c="${c.id}" data-p="${q?q.id:''}">${lstate(c)?'✓ ':''}${c.emoji} ${esc(c.title)} · ${q?esc(q.name):'anyone'}</button>`; }).join('')}</div></div>` : '';
-  return `${laundry}<div class="cols" style="--n:${ps.length}">${cols}</div>
-    <div class="box"><h2>Family chores today</h2><span class="hint">Shared jobs. Whoever takes it puts their name on it, or marks who did it.</span>
-      <div class="pg">${poolToday.length?poolToday.map(pcard).join(''):'<span class="hint">Nothing in the family pool today.</span>'}</div></div>
+      return `<button ${q?pvx(q,'pill'+(lstate(c)?' on':'')):`class="pill ${lstate(c)?'on':''}"`} data-a="details" data-c="${c.id}" data-p="${q?q.id:''}">${lstate(c)?'✓ ':''}${c.emoji} ${esc(c.title)} · ${who.length?who.map(x=>esc(x.name)).join(' & '):q?esc(q.name):'anyone'}</button>`; }).join('')}</div></div>` : '';
+  const missed = [];
+  for (let i=1; i<=6 && isToday; i++){ const dd = addDays(t,-i), mds = ymd(dd); if (ST().startDate && mds < ST().startDate) continue;
+    cfg().chores.forEach(c => { if (!['weekly','monthly'].includes(c.freq) || status(c)==='off' || !occurs(c,dd)) return;
+      if (isPool(c)) { if (!(D.pool[mds+'|'+c.id]||{}).doneBy) missed.push({c, date:mds}); }
+      else arr(c.assign).forEach(id => { if (P(id) && !D.done.has(key(mds,id,c.id))) missed.push({c, date:mds, pid:id}); }); }); }
+  const mcard = ({c,date,pid}) => { const q = pid && P(pid), day = DOWL[pd(date).getDay()];
+    return `<div ${q?pvx(q,'pc'):'class="pc"'} style="${q?'border-color:var(--c)':''}"><button class="top" data-a="details" data-c="${c.id}"><span class="e">${c.emoji}</span><span class="t">${esc(c.title)}<small>↩️ Missed ${day}${q?' · '+esc(q.name):' · family pool'}</small></span></button>
+      <div class="acts">${q?`<button class="btn sm" ${pvx(q,'btn sm')} style="background:var(--c);color:#fff" data-a="tick" data-c="${c.id}" data-p="${q.id}" data-date="${date}">✓ ${esc(q.name)} did it</button>`:`<button class="btn sm" data-a="pick" data-c="${c.id}" data-m="done" data-date="${date}">✓ Done by…</button>`}</div></div>`; };
+  return `${dayStrip()}${laundry}<div class="cols" style="--n:${ps.length}">${cols}</div>
+    <div class="box"><h2>Family chores ${isToday?'today':DOWL[t.getDay()]}</h2><span class="hint">Shared jobs. Whoever takes it puts their name on it, or marks who did it.</span>
+      <div class="pg">${poolToday.length?poolToday.map(pcard).join(''):'<span class="hint">Nothing in the family pool today.</span>'}</div>
+      ${missed.length?`<h2 style="margin-top:16px;font-size:19px">↩️ Catch up · missed this week <span class="hint">(${missed.length})</span></h2><span class="hint">Weekly and monthly jobs from the last few days that didn't get done. Doing one now still counts for its day.</span><div class="pg">${missed.map(mcard).join('')}</div>`:''}</div>
     ${kids.length?`<div class="box"><h2>Extra jobs for bonus stars</h2><span class="hint">Tap your name when it's done. A grown-up checks it.</span><div class="pg">${extras.map(xcard).join('')}</div></div>`:''}`;
 }
 
 function vChores(){
   const tabs = [['all','Everything'],['laundry','🧺 Laundry'],['r','Suggested for ReiRei'],['e','Suggested for Ender'],['a','Grown-ups & house'],['extra','Extra jobs']];
   const sts = [['all','Any status'],['assigned','Assigned'],['pool','Family pool'],['off','Not used']];
-  let list = cfg().chores.filter(c => U.lib==='all' || (U.lib==='laundry' ? c.cat==='laundry' : U.lib==='extra' ? c.freq==='extra' : c.freq!=='extra' && String(c.rec).includes(U.lib)));
-  if (U.libStatus!=='all') list = list.filter(c => status(c)===U.libStatus);
-  const order = ['daily','weekly','monthly','after','once','asneeded','extra'], gn = {daily:'Every day',weekly:'Weekly',monthly:'Monthly',after:"After it's done",once:'One time',asneeded:'As needed',extra:'Extra jobs (bonus stars)'};
-  const rows = order.map(f => { const l = list.filter(c=>c.freq===f); if (!l.length) return '';
-    return `<div class="grp">${gn[f]} <span class="hint">(${l.length})</span></div>` + l.map(c => `<div class="li" style="${c.active?'':'opacity:.5'}"><span class="e">${c.emoji}</span>
-      <button class="t" data-a="edit" data-c="${c.id}">${esc(c.title)}<small>${String(c.rec).includes('r')?'<span class="tag tr">ReiRei</span>':''}${String(c.rec).includes('e')?'<span class="tag te">Ender</span>':''}${String(c.rec).includes('a')?'<span class="tag ta">Grown-ups</span>':''}${esc(repeatText(c))}${c.freq==='asneeded'||String(c.rec)==='a'?'':Number(c.points)?` · ${levelName(c)} (${c.freq==='extra'?'☆ '+c.points+' stars':c.points+' pts'})`:' · 💛 No pay · just what we do'}</small></button>
-      <span class="as">${cfg().people.map(p=>`<button ${pvx(p,'ab'+(arr(c.assign).includes(p.id)?' on':''))} data-a="assign" data-c="${c.id}" data-p="${p.id}">${esc(p.name)}</button>`).join('')}<button class="ab abpool ${isPool(c)?'on':''}" data-a="assign" data-c="${c.id}" data-p="pool">🙋 Pool</button></span></div>`).join(''); }).join('');
-  return `<div class="bar"><span class="hint">${cfg().chores.length} chores. Tap a chore to edit it. Tap a name to give it to someone; tap again to take it away.</span><button class="btn" style="margin-left:auto" data-a="edit" data-c="new">+ New chore</button></div>
+  const sorts = [['group','How often'],['az','A → Z'],['za','Z → A'],['who','Who'],['day','Day of week'],['slot','Time of day'],['points','Pay (high → low)'],['status','Status']];
+  return `<div class="bar"><input id="libq" type="search" placeholder="🔍 Search chores, people or notes…" value="${esc(U.q)}" style="flex:1;min-width:220px;height:44px;border-radius:22px">
+      <label class="inl" style="font-size:13px;color:var(--muted)">Sort <select id="libsort" style="height:44px;border-radius:22px">${sorts.map(([k,l])=>`<option value="${k}" ${U.sort===k?'selected':''}>${l}</option>`).join('')}</select></label>
+      <button class="btn" data-a="edit" data-c="new">+ New chore</button></div>
     <div class="tabs">${tabs.map(([k,l])=>`<button class="pill ${U.lib===k?'on':''}" data-a="lib" data-k="${k}">${l}</button>`).join('')}</div>
     <div class="tabs">${sts.map(([k,l])=>`<button class="pill ${U.libStatus===k?'on':''}" data-a="libs" data-k="${k}">${l}</button>`).join('')}</div>
-    <div class="lib">${rows || '<div class="li"><span class="hint">No chores match.</span></div>'}</div>`;
+    <div id="libl">${libList()}</div>`;
+}
+function libRow(c){
+  return `<div class="li" style="${c.active?'':'opacity:.5'}"><span class="e">${c.emoji}</span>
+      <button class="t" data-a="edit" data-c="${c.id}">${esc(c.title)}<small>${c.cat==='laundry'?'<span class="tag">🧺 Laundry</span>':''}${String(c.rec).includes('r')?'<span class="tag tr">ReiRei</span>':''}${String(c.rec).includes('e')?'<span class="tag te">Ender</span>':''}${String(c.rec).includes('a')?'<span class="tag ta">Grown-ups</span>':''}${esc(repeatText(c))}${c.freq==='asneeded'||String(c.rec)==='a'?'':Number(c.points)?` · ${levelName(c)} (${c.freq==='extra'?'☆ '+c.points+' stars':c.points+' pts'})`:' · 💛 No pay · just what we do'}</small></button>
+      <span class="as">${cfg().people.map(p=>`<button ${pvx(p,'ab'+(arr(c.assign).includes(p.id)?' on':''))} data-a="assign" data-c="${c.id}" data-p="${p.id}">${esc(p.name)}</button>`).join('')}<button class="ab abpool ${isPool(c)?'on':''}" data-a="assign" data-c="${c.id}" data-p="pool">🙋 Pool</button></span></div>`;
+}
+function libList(){
+  const q = U.q.trim().toLowerCase();
+  let list = cfg().chores.filter(c => U.lib==='all' || (U.lib==='laundry' ? c.cat==='laundry' : U.lib==='extra' ? c.freq==='extra' : c.freq!=='extra' && String(c.rec).includes(U.lib)));
+  if (U.libStatus!=='all') list = list.filter(c => status(c)===U.libStatus);
+  if (q) list = list.filter(c => [c.title, c.how, c.emoji, repeatText(c), arr(c.assign).map(id=>P(id)?.name||'').join(' '), isPool(c)?'pool family':'', c.cat].join(' ').toLowerCase().includes(q));
+  if (!list.length) return `<div class="lib"><div class="li"><span class="hint">No chores match${q?` "${esc(U.q)}"`:''}.</span></div></div>`;
+  const head = `<p class="hint" style="margin:0 0 8px">${list.length} chore${list.length===1?'':'s'}. Tap a chore to edit it; tap a name to give it to someone.</p>`;
+  if (U.sort==='group'){
+    const order = ['daily','weekly','monthly','after','once','asneeded','extra'], gn = {daily:'Every day',weekly:'Weekly',monthly:'Monthly',after:"After it's done",once:'One time',asneeded:'As needed',extra:'Extra jobs (bonus stars)'};
+    return head + `<div class="lib">${order.map(f => { const l = list.filter(c=>c.freq===f); return l.length ? `<div class="grp">${gn[f]} <span class="hint">(${l.length})</span></div>` + l.map(libRow).join('') : ''; }).join('')}</div>`;
+  }
+  const people = cfg().people.map(p=>p.id), dayRank = c => { const d = arr(c.days).filter(x=>typeof x==='number'); return ['daily'].includes(c.freq) && !d.length ? -1 : d.length ? Math.min(...d.map(x=>(x+6)%7)) : 9; };
+  const whoRank = c => arr(c.assign).length ? Math.min(...arr(c.assign).map(id=>people.indexOf(id)).filter(i=>i>=0)) : isPool(c) ? 90 : 99;
+  const slotRank = c => ({morning:0,afternoon:1,evening:2,anytime:3})[c.slot] ?? 4, stRank = c => ({assigned:0,pool:1,off:2})[status(c)];
+  const by = {az:(a,b)=>a.title.localeCompare(b.title), za:(a,b)=>b.title.localeCompare(a.title), who:(a,b)=>whoRank(a)-whoRank(b)||a.title.localeCompare(b.title),
+    day:(a,b)=>dayRank(a)-dayRank(b)||a.title.localeCompare(b.title), slot:(a,b)=>slotRank(a)-slotRank(b)||a.title.localeCompare(b.title),
+    points:(a,b)=>(Number(b.points)||0)-(Number(a.points)||0)||a.title.localeCompare(b.title), status:(a,b)=>stRank(a)-stRank(b)||a.title.localeCompare(b.title)}[U.sort];
+  return head + `<div class="lib">${[...list].sort(by).map(libRow).join('')}</div>`;
 }
 const chipRow = (name, opts, sel) => `<div class="chips" data-group="${name}">${opts.map(([v,l,p,bg])=>`<button type="button" ${p?pvx(p,'chipb'+(sel.includes(v)?' on':'')):`class="chipb ${sel.includes(v)?'on':''}"`} ${bg?`style="background:${bg};border-color:${bg};color:#fff;${sel.includes(v)?'box-shadow:0 0 0 3px var(--ink)':''}"`:''} data-a="chip" data-v="${v}">${l}</button>`).join('')}</div>`;
 const chipVals = g => [...document.querySelectorAll(`[data-group="${g}"] .chipb.on`)].map(b=>b.dataset.v);
-const SINGLE = ['freq','slot','week','bcolor','mmode'];
+const SINGLE = ['freq','slot','week','bcolor','mmode','bkind','gdur'];
 
 /* Skylight-style chore details: tap a chore to see it, mark it done, read it aloud, edit or delete. */
 function details(cid, pid){
@@ -691,6 +773,16 @@ function drawRepeat(c){
 }
 function monthMode(){ const date = chipVals('mmode')[0]==='date'; const mm=$('#mm'), md=$('#md'); if (mm) mm.style.display = date?'none':''; if (md) md.style.display = date?'':'none'; }
 
+const hmOf = iso => { const d = new Date(iso); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; };
+function dayBlocks(p, date){
+  const ds = ymd(date), dow = date.getDay(), evs = S.events.filter(e => !e.allDay && ymd(new Date(e.start))===ds);
+  const bl = cfg().sched.filter(b => b.who.includes(p.id) && b.days.includes(dow)).map(b => { const g = evs.find(e => e.tag==='block:'+b.id);
+    return g ? {...b, start:hmOf(g.start), end:hmOf(g.end), title:g.title.replace(b.emoji,'').trim()} : b; });
+  const txt = e => (e.title+' '+(e.desc||'')).toLowerCase();
+  const extra = evs.filter(e => !(e.tag||'').startsWith('block:') && !(e.tag||'').startsWith('chore:') && (txt(e).includes(p.name.toLowerCase()) || (p.full && txt(e).includes(p.full.toLowerCase()))))
+    .map(e => ({id:e.id, start:hmOf(e.start), end:hmOf(e.end), title:e.title, emoji:'📅', google:true, color:e.color}));
+  return bl.concat(extra).sort((a,b) => a.start.localeCompare(b.start));
+}
 function vSched(){
   const ps = shown(), S0 = 6.5*60, E0 = 21.5*60, PX = 1.15, H = 48+(E0-S0)*PX, y = t => { const [h,m] = t.split(':').map(Number); return 48+(h*60+m-S0)*PX; };
   let hrs = ''; for (let h=7; h<=21; h++) hrs += `<div class="hr" style="top:${48+(h*60-S0)*PX}px">${h>12?h-12:h}${h<12?'a':'p'}</div>`;
@@ -705,12 +797,14 @@ function vSched(){
       return g ? {...b, start:hmOf(g.start), end:hmOf(g.end), title:g.title.replace(b.emoji,'').trim(), moved:true} : b; });
     const mine = loose.filter(e => (e.title+' '+(e.desc||'')).toLowerCase().includes(p.name.toLowerCase()) || (p.full && (e.title+' '+(e.desc||'')).toLowerCase().includes(p.full.toLowerCase())));
     return `<div ${pvx(p,'tcol')} style="--c:${col(p)};height:${H}px"><div class="hh"><span class="av s">${ini(p)}</span>${esc(p.name)}<button class="btn light sm" data-a="block" data-id="new" data-p="${p.id}">+ Add</button></div>
-      ${bl.filter(b=>b.start<b.end).map(b=>`<button class="blk" data-a="block" data-id="${b.id}" style="--bc:${b.color?PALETTE[b.color]:col(p)};top:${y(b.start)}px;height:${Math.max(16,y(b.end)-y(b.start)-2)}px">${b.emoji} ${esc(b.title)}<small>${fmtT(b.start)}–${fmtT(b.end)}</small></button>`).join('')}
+      ${bl.filter(b=>b.start<b.end).map(b=>{ let tag = ''; if (b.kind==='playtime' && isT && p.kid){ const L = listFor(p, t), gl = L.filter(x=>arr(ST().gateSlots).includes(x.g)), left = gl.filter(x=>!x.d).length, g = Object.keys(groundsFor(p.id));
+          tag = left ? ` · 🔒 ${left} chores left` : g.length===3 ? ' · ⛔ grounded' : g.length ? ` · 🔓 (no ${g.map(k=>PRIVS.find(x=>x[0]===k)[2].toLowerCase()).join(', ')})` : ' · 🔓 earned!'; }
+        return `<button class="blk" data-a="block" data-id="${b.id}" style="--bc:${b.color?PALETTE[b.color]:col(p)};top:${y(b.start)}px;height:${Math.max(16,y(b.end)-y(b.start)-2)}px">${b.emoji} ${esc(b.title)}${tag}<small>${fmtT(b.start)}–${fmtT(b.end)}</small></button>`; }).join('')}
       ${mine.map(e=>`<div class="blk gc" style="--bc:${e.color||'#7a8592'};top:${y(hmOf(e.start))}px;height:${Math.max(16,y(hmOf(e.end))-y(hmOf(e.start))-2)}px">📅 ${esc(e.title)}<small>${esc(e.cal)}</small></div>`).join('')}${nl}</div>`; }).join('');
   const unmatched = loose.filter(e => !cfg().people.some(p => (e.title+' '+(e.desc||'')).toLowerCase().includes(p.name.toLowerCase())));
   return `<div class="bar"><h1 class="title" style="margin-right:6px">Schedules</h1>
       ${[1,2,3,4,5,6,0].map(d=>`<button class="pill ${U.day===d?'on':''}" data-a="day" data-d="${d}">${DOWL[d].slice(0,3)}${d===t.getDay()?' •':''}</button>`).join('')}</div>
-    <div class="banner">Tap a block to change it, or "+ Add". Schedules are copied to the <b>Family Hub</b> Google Calendar as repeating events. Changes made there show up here.${remote==='local'?' (Google isn\'t connected on this copy.)':''}</div>
+    <div class="banner">Tap a block to change it, or "+ Add". Schedules are copied to the <b>Family Hub</b> Google Calendar as repeating events (chores stay in the app). Changes made there show up here.${remote==='local'?' (Google isn\'t connected on this copy.)':''}</div>
     ${unmatched.length?`<div class="box" style="margin:0 0 12px"><h2 style="font-size:18px">Family calendar · ${DOWL[U.day]}</h2>${unmatched.map(e=>`<div class="hint">📅 ${fmtT(hmOf(e.start))} ${esc(e.title)}</div>`).join('')}</div>`:''}
     <div class="tl" style="--n:${ps.length}"><div style="position:relative;height:${H}px">${hrs}</div>${cols}</div>`;
 }
@@ -721,6 +815,7 @@ function editBlock(id, pid){
     <div class="g2"><label class="fl">Starts<input id="b_start" type="time" value="${b.start}"></label><label class="fl">Ends<input id="b_end" type="time" value="${b.end}"></label></div>
     <div class="fl">Repeats on${chipRow('bdays', DOW.map((d,i)=>[String(i),d]), b.days.map(String))}</div>
     <div class="fl">Who${chipRow('bwho', cfg().people.map(p=>[p.id,p.name,p]), b.who)}</div>
+    <div class="fl">What kind of time${chipRow('bkind', [['','Regular'],['homework','📚 Homework / reading'],['chores','🧹 Chores'],['playtime','🎉 Playtime (if earned)']], [b.kind||''])}</div>
     <div class="fl">Color${chipRow('bcolor', [['',"Person's color"]].concat(Object.entries(PALETTE).map(([k,v])=>[k,'',null,v])), [b.color||''])}</div>
     <div class="mact">${id!=='new'?`<button class="btn bad" data-a="delblock" data-id="${b.id}">Delete</button>`:''}<span class="sp"></span><button class="btn light" data-a="close">Cancel</button><button class="btn" data-a="saveblock" data-id="${b.id}">Save</button></div>`);
 }
@@ -763,8 +858,8 @@ function vFamily(){
 }
 // ---------- grown-ups ----------
 function vParent(){
-  const tabs = [['chores','📋 Chores'],['approve','✋ Approvals'+(D.pending.length?` (${D.pending.length})`:'')],['behavior','⭐ Bonus & demerits'],['guide','📘 How points work'],['payday','💰 Payday'],['money','🫙 Money jars'],['rewardsEdit','🎁 Rewards'],['history','📜 History'],['settings','⚙️ Settings & Google']];
-  const body = {chores:vChores, guide:pGuide, approve:pApprove, behavior:pBehavior, payday:pPayday, money:pMoney, rewardsEdit:pRewards, history:pHistory, settings:pSettings}[U.ptab]();
+  const tabs = [['chores','📋 Chores'],['approve','✋ Approvals'+(D.pending.length?` (${D.pending.length})`:'')],['behavior','⭐ Bonus & demerits'],['grounded','⛔ Grounded'],['guide','📘 How points work'],['payday','💰 Payday'],['money','🫙 Money jars'],['rewardsEdit','🎁 Rewards'],['history','📜 History'],['settings','⚙️ Settings & Google']];
+  const body = {chores:vChores, guide:pGuide, grounded:pGrounded, approve:pApprove, behavior:pBehavior, payday:pPayday, money:pMoney, rewardsEdit:pRewards, history:pHistory, settings:pSettings}[U.ptab]();
   return `<div class="bar"><h1 class="title">Grown-ups</h1><span class="hint">Locks again after 5 minutes.</span><span style="margin-left:auto;display:flex;gap:8px"><button class="btn light sm" data-a="refresh">↻ Refresh</button><button class="btn sm" data-a="lock">Lock</button></span></div>
     <div class="tabs">${tabs.map(([t,l])=>`<button class="pill ${U.ptab===t?'on':''}" data-a="ptab" data-t="${t}">${l}</button>`).join('')}</div>${body}`;
 }
@@ -793,6 +888,18 @@ function pBehavior(){
       <div class="inl" style="margin-top:12px">Other: <input id="bnT" placeholder="Why" style="flex:1"><input id="bnN" type="number" value="2" min="1" style="width:70px"><button class="btn good sm" data-a="bonus" data-p="${U.bk}" data-custom="1">Give</button></div></div>
     <div class="box" style="margin-top:0"><h2>➖ Demerit for ${esc(k?.name||'')}</h2><p class="hint" style="margin:4px 0 0">Lost today: ${lost} of ${cap} ⭐ max. Never below zero.</p>${btns(DEMERIT,'demerit')}
       <div class="inl" style="margin-top:12px">Other: <input id="dmT" placeholder="Why" style="flex:1"><input id="dmN" type="number" value="2" min="1" style="width:70px"><button class="btn bad sm" data-a="demerit" data-p="${U.bk}" data-custom="1">Take</button></div></div></div>`;
+}
+function pGrounded(){
+  const kids = cfg().people.filter(p=>p.kid); if (!U.bk || !P(U.bk)) U.bk = kids[0]?.id;
+  const active = (D.grounds||[]).filter(g => !g.lifted && (!g.until || g.until >= TODAY()));
+  return `<div class="twocol"><div class="box" style="margin-top:0"><h2>⛔ Ground</h2>
+    <p class="hint">Chores still have to get done. Grounding keeps these locked even after Playtime is earned.</p>
+    <div class="fl">Who<div class="chips">${kids.map(x=>`<button ${pvx(x,'chipb'+(U.bk===x.id?' on':''))} data-a="bk" data-p="${x.id}">${esc(x.name)}</button>`).join('')}</div></div>
+    <div class="fl">Take away (pick any)${chipRow('gitems', PRIVS.map(([k,e,l])=>[k,e+' '+l]), [])}</div>
+    <div class="fl">For how long${chipRow('gdur', [['0','Rest of today'],['1','2 days'],['2','3 days'],['6','1 week'],['x','Until we lift it']], ['0'])}</div>
+    <label class="fl">Why (optional)<input id="g_why" placeholder="e.g. hit his brother"></label>
+    <button class="btn bad" data-a="ground">Ground ${esc(P(U.bk)?.name||'')}</button></div>
+    <div class="box" style="margin-top:0"><h2>Right now</h2>${active.length?`<div class="list">${active.map(g=>{const k=P(g.kid)||{name:g.kid};return `<div class="it"><span class="t">${esc(k.name)}: no ${g.items.map(i=>PRIVS.find(x=>x[0]===i)?.[2].toLowerCase()).join(', ')}<small>${untilText(g.until)}${g.reason?' · '+esc(g.reason):''}</small></span><button class="btn light sm" data-a="unground" data-id="${g.id}">Lift</button></div>`;}).join('')}</div>`:'<p class="hint">Nobody is grounded.</p>'}</div></div>`;
 }
 function pGuide(){
   const s = ST(), spd = Number(s.starsPerDollar)||10;
@@ -859,6 +966,7 @@ const A = {
   cards: d => needParent(() => { ST().cards = d.v; saveConfig(); render(); }),
   me: d => { DV.me = DV.me===d.p ? '' : d.p; saveDev(); toast(DV.me ? `This device opens on ${P(d.p).name}` : 'Cleared'); },
   ring: d => { U.ring[d.p] = U.ring[d.p]===d.g ? null : d.g; },
+  off: d => { U.off = Number(d.n); }, plan: () => { U.plan = !U.plan; },
   close: (d, el, ev) => { if (d.self && ev.target!==el) return 'skip'; modal(''); return 'skip'; },
   pin: d => {
     if (d.n==='✕'){ modal(''); return 'skip'; }
@@ -874,24 +982,24 @@ const A = {
   color: d => { const p = P(d.p); modal(`<h2>${esc(p.name)}, pick your color!</h2>${swatches(p)}<p class="hint" style="margin-top:12px">Colors with a letter belong to someone else.</p><div class="mact"><span class="sp"></span><button class="btn" data-a="close">Done</button></div>`); return 'skip'; },
   setcolor: d => { const p = P(d.p); if (cfg().people.some(q=>q.color===d.k && q.id!==p.id)) return 'skip'; p.color = d.k; saveConfig('Color saved'); const open = !!$('#modal').innerHTML; render(); if (open) A.color(d); return 'skip'; },
   tick: d => {
-    const p = P(d.p), c = cfg().chores.find(x=>x.id===d.c), ds = TODAY(), was = D.done.has(key(ds,p.id,c.id));
+    const p = P(d.p), c = cfg().chores.find(x=>x.id===d.c), ds = d.date || TODAY(), was = D.done.has(key(ds,p.id,c.id));
     const gateBefore = listFor(p, now()).filter(x => arr(ST().gateSlots).includes(x.g) && !x.d).length;
-    log({kid:p.id, type: was?'undo':'done', ref:c.id, title:c.title, pts:Number(c.points)||0}); D = derive(); blip(!was);
+    log({kid:p.id, type: was?'undo':'done', ref:c.id, title:c.title, pts:Number(c.points)||0, date:ds}); D = derive(); blip(!was);
     if (d.close) modal('');
-    afterTick(p, ds, was, gateBefore);
+    if (ds === TODAY()) afterTick(p, ds, was, gateBefore); else toast(`✓ ${p.name} caught up: ${c.title}`);
   },
   details: d => { details(d.c, d.p); return 'skip'; },
   moveday: d => needParent(() => { const c = cfg().chores.find(x=>x.id===d.c), v = chipVals('mv').map(Number).sort(); if (!v.length) return toast('Pick at least one day'); c.days = v; modal(''); saveConfig('Moved to '+v.map(x=>DOWL[x]).join(', ')); render(); }),
   pick: d => { const c = cfg().chores.find(x=>x.id===d.c); modal(`<h2>${d.m==='take'?"Who's taking it?":'Who did it?'}</h2><p class="hint" style="margin-top:-8px">${c.emoji} ${esc(c.title)}</p>
-      <div class="chips" style="margin:14px 0">${cfg().people.map(p=>`<button ${pvx(p,'chipb on')} style="height:52px;font-size:16px;padding:0 18px" data-a="${d.m==='take'?'take':'pooldone'}" data-c="${c.id}" data-p="${p.id}">${esc(p.name)}</button>`).join('')}</div>
+      <div class="chips" style="margin:14px 0">${cfg().people.map(p=>`<button ${pvx(p,'chipb on')} style="height:52px;font-size:16px;padding:0 18px" data-a="${d.m==='take'?'take':'pooldone'}" data-c="${c.id}" data-p="${p.id}" ${d.date?`data-date="${d.date}"`:''}>${esc(p.name)}</button>`).join('')}</div>
       <div class="mact"><span class="sp"></span><button class="btn light" data-a="close">Cancel</button></div>`); return 'skip'; },
-  take: d => { const c = cfg().chores.find(x=>x.id===d.c); log({kid:d.p, type:'take', ref:c.id, title:c.title}); modal(''); toast(`${P(d.p).name} is taking it`); },
-  release: d => { const c = cfg().chores.find(x=>x.id===d.c), k = D.pool[TODAY()+'|'+c.id]; log({kid:k?.taker||'', type:'release', ref:c.id, title:c.title}); },
-  pooldone: d => { const c = cfg().chores.find(x=>x.id===d.c), p = P(d.p), k = D.pool[TODAY()+'|'+c.id];
-    if (k && k.doneBy){ log({kid:k.doneBy, type:'poolundo', ref:c.id, title:c.title, stars: P(k.doneBy)?.kid ? Number(c.points)||0 : ''}); }
-    else { log({kid:p.id, type:'pooldone', ref:c.id, title:c.title, stars: p.kid ? Number(c.points)||0 : ''}); blip(); toast(`Done by ${p.name} ✓${p.kid&&c.points?` · +${c.points} ⭐`:''}`); }
+  take: d => { const c = cfg().chores.find(x=>x.id===d.c); log({kid:d.p, type:'take', ref:c.id, title:c.title, date:d.date||TODAY()}); modal(''); toast(`${P(d.p).name} is taking it`); },
+  release: d => { const c = cfg().chores.find(x=>x.id===d.c), ds = d.date||TODAY(), k = D.pool[ds+'|'+c.id]; log({kid:k?.taker||'', type:'release', ref:c.id, title:c.title, date:ds}); },
+  pooldone: d => { const c = cfg().chores.find(x=>x.id===d.c), p = P(d.p), ds = d.date || TODAY(), k = D.pool[ds+'|'+c.id];
+    if (k && k.doneBy){ log({kid:k.doneBy, type:'poolundo', ref:c.id, title:c.title, date:ds, stars: P(k.doneBy)?.kid ? Number(c.points)||0 : ''}); }
+    else { log({kid:p.id, type:'pooldone', ref:c.id, title:c.title, date:ds, stars: p.kid ? Number(c.points)||0 : ''}); blip(); toast(`Done by ${p.name} ✓${p.kid&&c.points?` · +${c.points} ⭐`:''}`); }
     modal(''); },
-  poolundo: d => { const c = cfg().chores.find(x=>x.id===d.c), k = D.pool[TODAY()+'|'+c.id]; if (k && k.doneBy) log({kid:k.doneBy, type:'poolundo', ref:c.id, title:c.title, stars: P(k.doneBy)?.kid ? Number(c.points)||0 : ''}); },
+  poolundo: d => { const c = cfg().chores.find(x=>x.id===d.c), ds = d.date||TODAY(), k = D.pool[ds+'|'+c.id]; if (k && k.doneBy) log({kid:k.doneBy, type:'poolundo', ref:c.id, title:c.title, date:ds, stars: P(k.doneBy)?.kid ? Number(c.points)||0 : ''}); },
   extra: d => { const c = cfg().chores.find(x=>x.id===d.c), p = P(d.p), n = D.extraCount[key(TODAY(),p.id,c.id)]||0;
     if (n) { toast(`${p.name} already did this today`); return 'skip'; }
     modal(`<div class="big">${c.emoji}</div><h2 style="text-align:center">${esc(c.title)}</h2><p class="hint" style="text-align:center">${esc(p.name)}, did you finish it? A grown-up will check it and give you ${c.points} ⭐.</p><div class="mact" style="justify-content:center"><button class="btn light" data-a="close">Not yet</button><button class="btn good" data-a="extrayes" data-c="${c.id}" data-p="${p.id}">Yes, I did it!</button></div>`); return 'skip'; },
@@ -905,6 +1013,11 @@ const A = {
     render(); }),
   ptab: d => { U.ptab = d.t; },
   bk: d => { U.bk = d.p; },
+  ground: () => needParent(() => { const items = chipVals('gitems'); if (!items.length) return toast('Pick at least one: friends, video games or screen time');
+    const dur = chipVals('gdur')[0] || '0', until = dur==='x' ? '' : ymd(addDays(now(), Number(dur))), k = P(U.bk);
+    log({kid:k.id, type:'ground', ref:items.join(','), note:until, title:$('#g_why').value||'Grounded', by:'parent'});
+    toast(`${k.name} is grounded from ${items.map(i=>PRIVS.find(x=>x[0]===i)[2].toLowerCase()).join(', ')} ${untilText(until)}`); render(); }),
+  unground: d => needParent(() => { const g = (D.grounds||[]).find(x=>x.id===d.id); log({kid:g.kid, type:'unground', ref:g.id, title:'Grounding lifted', by:'parent'}); toast('Lifted'); render(); }),
   bonus: d => needParent(() => { const n = d.custom ? Number($('#bnN').value)||1 : Number(d.n), why = d.custom ? ($('#bnT').value||'Bonus') : d.t;
     log({kid:d.p, type:'bonus', ref:'parent:'+uid(), stars:n, title:why, by:'parent'}); toast(`${P(d.p).name}: +${n} ⭐ · ${why}`); confetti(col(P(d.p))); render(); }),
   demerit: d => needParent(() => { let n = d.custom ? Number($('#dmN').value)||1 : Number(d.n); const why = d.custom ? ($('#dmT').value||'Demerit') : d.t, cap = Number(ST().demeritCap)||15;
@@ -954,7 +1067,7 @@ const A = {
   delchore: d => needParent(() => { if (!confirm('Delete this chore?')) return; S.config.chores = cfg().chores.filter(x=>x.id!==d.c); modal(''); saveConfig('Chore deleted'); render(); }),
   block: d => needParent(() => editBlock(d.id, d.p)),
   saveblock: d => { const title = $('#b_title').value.trim(); if (!title){ toast('Give it a name'); return 'skip'; }
-    const v = {title, emoji:$('#b_emoji').value||'⭐', start:$('#b_start').value, end:$('#b_end').value, days:chipVals('bdays').map(Number), who:chipVals('bwho'), color:chipVals('bcolor')[0]||''};
+    const v = {title, emoji:$('#b_emoji').value||'⭐', start:$('#b_start').value, end:$('#b_end').value, days:chipVals('bdays').map(Number), who:chipVals('bwho'), color:chipVals('bcolor')[0]||'', kind:chipVals('bkind')[0]||''};
     if (!v.who.length){ toast("Pick who it's for"); return 'skip'; } if (!v.days.length){ toast('Pick at least one day'); return 'skip'; } if (v.end<=v.start){ toast('End time must be after the start'); return 'skip'; }
     if (d.id==='new') cfg().sched.push(Object.assign({id:'s'+uid()}, v)); else Object.assign(cfg().sched.find(x=>x.id===d.id), v);
     modal(''); saveConfig('Saved. Updating Google Calendar…'); },
@@ -998,7 +1111,7 @@ function afterTick(p, ds, was, gateBefore){
       const sb = streak && streak % (Number(s.streakDays)||7) === 0; if (sb) log({kid:p.id, type:'bonus', ref:'streak:'+ds, stars:Number(s.streakBonus)||0, title:`${streak}-day streak!`});
       confetti(col(p)); say(`Great job ${p.name}! You finished everything today!`);
       modal(`<div class="big">🏆</div><h2 style="text-align:center">${esc(p.name)} finished everything!</h2><p class="hint" style="text-align:center">+${s.fullDayBonus} bonus ⭐${sb?` and +${s.streakBonus} ⭐ for a ${streak}-day streak!`:''}</p><div class="mact" style="justify-content:center"><button class="btn good" data-a="close">Yay!</button></div>`);
-    } else if (gateBefore && !gl){ confetti(col(p)); say(`${p.name}, play time is unlocked!`); toast(`🔓 ${p.name}: friends & games unlocked!`); }
+    } else if (gateBefore && !gl){ const gr = Object.keys(groundsFor(p.id)); confetti(col(p)); say(`${p.name}, playtime is unlocked!`); toast(`🎉 ${p.name}: Playtime unlocked!${gr.length?' (still grounded from '+gr.map(k=>PRIVS.find(x=>x[0]===k)[2].toLowerCase()).join(', ')+')':''}`); }
   } else if (have && !allDone){
     log({kid:p.id, type:'bonus', ref:fk, stars:-(Number(s.fullDayBonus)||0), title:'Undo: day not finished'});
     if ((D.bonus[p.id+'|streak:'+ds]||0) > 0) log({kid:p.id, type:'bonus', ref:'streak:'+ds, stars:-(Number(s.streakBonus)||0), title:'Undo streak'});
@@ -1009,7 +1122,8 @@ document.addEventListener('click', ev => {
   const r = fn(el.dataset, el, ev); if (r !== 'skip') render();
   if (isParent()) U.parentUntil = Date.now()+5*60*1000;
 });
-document.addEventListener('change', ev => { const el = ev.target; if (el.dataset.pf){ if (!isParent()){ needParent(()=>{}); render(); return; } const p = P(el.dataset.p); p[el.dataset.pf] = el.value || (el.dataset.pf==='name'?'?':''); saveConfig(); render(); } });
+document.addEventListener('input', ev => { if (ev.target.id==='libq'){ U.q = ev.target.value; const box = $('#libl'); if (box) box.innerHTML = libList(); } });
+document.addEventListener('change', ev => { if (ev.target.id==='libsort'){ U.sort = ev.target.value; const box = $('#libl'); if (box) box.innerHTML = libList(); return; } const el = ev.target; if (el.dataset.pf){ if (!isParent()){ needParent(()=>{}); render(); return; } const p = P(el.dataset.p); p[el.dataset.pf] = el.value || (el.dataset.pf==='name'?'?':''); saveConfig(); render(); } });
 addEventListener('resize', () => { clearTimeout(A._r); A._r = setTimeout(() => { if (!busy()) render(); }, 200); });
 
 // ---------- start ----------
@@ -1023,7 +1137,7 @@ addEventListener('resize', () => { clearTimeout(A._r); A._r = setTimeout(() => {
   render(); syncDot(remote==='local'?'':'busy');
   pull(true);
   let lastDay = TODAY();
-  setInterval(() => { if (TODAY()!==lastDay){ lastDay = TODAY(); U.day = now().getDay(); } if (U.view==='parent' && !isParent()) U.view = 'today'; if (!busy()) render(); }, 30000);
+  setInterval(() => { if (TODAY()!==lastDay){ lastDay = TODAY(); U.day = now().getDay(); U.off = 0; } if (U.view==='parent' && !isParent()) U.view = 'today'; if (!busy()) render(); }, 30000);
   setInterval(() => { if (!busy()) pull(); }, 90000);
   setInterval(flush, 20000);
 })();
