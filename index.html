@@ -278,21 +278,21 @@ const LIBRARY = [
   K('💌','Make a thank-you card','re','extra','anytime'), K('📬','Bring in the mail','re','extra','anytime',{points:1}),
   K('❄️','Shovel snow with a grown-up','re','extra','anytime',{points:5,months:SNOW}), K('🍂','Extra leaf raking','re','extra','anytime',{points:4,months:[9,10,11]}),
 ];
-// ---- laundry: Sunday = Ender's, Tuesday = ReiRei's + towels, Thursday = grown-ups' ----
-const L = (id, emoji, title, kid, day, slot, points, o={}) => Object.assign({id, emoji, title, rec: kid==='pool'||kid==='victor'||kid==='chelsea' ? 'a' : (kid==='ender'?'e':'r'), freq:'weekly', every:1, slot, days:[day], week:1, monthDay:'', date:'', start:'', until:'', afterDays:7, months:[], time:'', points, how:'', assign: kid==='pool'?[]:[kid], pool: kid==='pool', active:true, cat:'laundry'}, o);
+// ---- laundry: Sunday = the boys (washed together, each puts away his own), Tuesday = Victor, Thursday = Chelsea ----
+const L = (id, emoji, title, who, day, slot, points, o={}) => Object.assign({id, emoji, title, rec: who.some(w=>w==='victor'||w==='chelsea'||w==='pool') ? 'a' : who.map(w=>w==='ender'?'e':'r').join(''), freq:'weekly', every:1, slot, days:[day], week:1, monthDay:'', date:'', start:'', until:'', afterDays:7, months:[], time:'', points, how:'', assign: who.filter(w=>w!=='pool'), pool: who.includes('pool'), active:true, cat:'laundry'}, o);
 const LAUNDRY = [
-  L('l1','🧺','Bring my hamper to the laundry room','ender',0,'morning',0,{how:"Sunday is Ender's laundry day."}),
-  L('l2','🎨','Sort my clothes: lights & darks','ender',0,'morning',0,{how:'Two piles. Ask a grown-up if you are not sure.'}),
-  L('l3','🫧',"Wash & dry Ender's laundry",'victor',0,'morning',0,{how:'Start it in the morning so it can be folded on Monday.'}),
-  L('l4','👕','Fold & put away my clothes','ender',1,'afternoon',0,{how:'Shirts folded in the drawer, pants together, socks matched.'}),
-  L('l5','🧺','Bring my hamper to the laundry room','reiden',2,'morning',0,{how:"Tuesday is ReiRei's laundry day."}),
-  L('l6','🫧',"Wash & dry ReiRei's laundry + towels",'chelsea',2,'morning',0),
-  L('l7','🧦','Match my socks & fill my drawers','reiden',3,'afternoon',0),
-  L('l8','🧽','Fold the washcloths & hand towels','reiden',3,'afternoon',1),
-  L('l9','🛁','Fold the bath towels & put them away','ender',3,'afternoon',2),
-  L('l10','🫧',"Wash & dry the grown-ups' laundry",'pool',4,'morning',0,{how:"Thursday is Victor & Chelsea's laundry day."}),
-  L('l11','👔',"Fold & put away the grown-ups' laundry",'pool',5,'anytime',0),
-  Object.assign(L('l12','👔',"Help fold the grown-ups' laundry",'pool',5,'anytime',4),{freq:'extra', rec:'re', days:[], pool:true, cat:'laundry'}),
+  L('lb1','🧺','Bring my hamper to the laundry room',['reiden','ender'],0,'morning',0,{how:"Sunday is the boys' laundry day."}),
+  L('lb2','🎨','Sort the clothes: lights & darks',['reiden','ender'],0,'morning',0,{how:'Two piles. Ask a grown-up if you are not sure.'}),
+  L('lb3','🫧',"Wash & dry the boys' laundry + towels",['pool'],0,'morning',0,{how:'Start it in the morning so the boys can put clothes away Monday.'}),
+  L('lb4','👕','Fold & put away my clean clothes',['ender'],1,'afternoon',0,{how:'Shirts folded in the drawer, pants together, socks matched.'}),
+  L('lb5','🧦','Match my socks & fill my drawers',['reiden'],1,'afternoon',0),
+  L('lb6','🛁','Fold the bath towels & put them away',['ender'],1,'afternoon',2),
+  L('lb7','🧽','Fold the washcloths & hand towels',['reiden'],1,'afternoon',1),
+  L('lv1','🫧',"Wash & dry Victor's laundry",['victor'],2,'morning',0,{how:"Tuesday is Victor's laundry day."}),
+  L('lv2','👔',"Fold & put away Victor's laundry",['victor'],3,'anytime',0),
+  L('lc1','🫧',"Wash & dry Chelsea's laundry",['chelsea'],4,'morning',0,{how:"Thursday is Chelsea's laundry day."}),
+  L('lc2','👚',"Fold & put away Chelsea's laundry",['chelsea'],5,'anytime',0),
+  Object.assign(L('lx1','👔',"Help fold Mom's or Dad's laundry",['pool'],3,'anytime',4),{freq:'extra', rec:'re', days:[]}),
 ];
 // difficulty → points (chores) / stars (extra jobs). Easy 1, Medium 2, Hard 3, Big job 5 · extras 2 / 4 / 6 / 10
 const PTS = {'Read for 20 minutes':2,'Book time with a grown-up (15 min)':2,'10-minute room tidy':2,'Fold & put away my laundry':3,'Vacuum my room':3,
@@ -347,7 +347,7 @@ const DEFAULTS = {
     {id:'r9',emoji:'🏕️',title:'Friend playdate or sleepover',cost:80,cash:'',active:true},{id:'r10',emoji:'🧸',title:'Small toy or book (up to $5)',cost:50,cash:'',active:true},
     {id:'r11',emoji:'🎉',title:'YES DAY!',cost:200,cash:'',active:true},
   ],
-  settings: {pin:'8057', cards:'big', allowancePerYear:1, tiers:[{min:90,pay:100},{min:75,pay:75},{min:50,pay:50},{min:0,pay:25}], jars:{spend:50,save:40,give:10}, matchPct:10, fullDayBonus:2, streakDays:7, streakBonus:10, gateSlots:['morning','afternoon'], calendarNames:'', shareEmails:'', startDate:'', sound:true, starsPerDollar:10, demeritCap:15, libVersion:5},
+  settings: {pin:'8057', cards:'big', allowancePerYear:1, tiers:[{min:90,pay:100},{min:75,pay:75},{min:50,pay:50},{min:0,pay:25}], jars:{spend:50,save:40,give:10}, matchPct:10, fullDayBonus:2, streakDays:7, streakBonus:10, gateSlots:['morning','afternoon'], calendarNames:'', shareEmails:'', startDate:'', sound:true, starsPerDollar:10, demeritCap:15, libVersion:6},
 };
 
 // ---------- state ----------
@@ -510,7 +510,10 @@ async function pull(first){
     if (j.config){ S.config = normalize(j.config); if ((Number(ST().libVersion)||1) < 3) migrate2(); if ((Number(ST().libVersion)||1) < 4){ if (String(ST().pin)==='1234') ST().pin = '8057'; ST().libVersion = 4; setTimeout(() => saveConfig('PIN updated'), 800); }
       if ((Number(ST().libVersion)||1) < 5){ const drop = ['Match socks from the laundry','Fold & put away my laundry','Put clean clothes in my drawers','Laundry: wash, dry, fold'];
         S.config.chores = cfg().chores.filter(c => !drop.includes(c.title)); const have = new Set(cfg().chores.map(c=>c.id));
-        S.config.chores = JSON.parse(JSON.stringify(LAUNDRY.filter(c=>!have.has(c.id)))).concat(cfg().chores); normalize(S.config); ST().libVersion = 5; setTimeout(() => saveConfig('Laundry days added'), 1200); } }
+        S.config.chores = JSON.parse(JSON.stringify(LAUNDRY.filter(c=>!have.has(c.id)))).concat(cfg().chores); normalize(S.config); ST().libVersion = 5; }
+      if ((Number(ST().libVersion)||1) < 6){ const old = ['l1','l2','l3','l4','l5','l6','l7','l8','l9','l10','l11','l12'];
+        const have = new Set(cfg().chores.map(c=>c.id)); S.config.chores = JSON.parse(JSON.stringify(LAUNDRY.filter(c=>!have.has(c.id)))).concat(cfg().chores.filter(c=>!old.includes(c.id)));
+        normalize(S.config); ST().libVersion = 6; setTimeout(() => saveConfig('Laundry days updated'), 1200); } }
     else if (first){ D = derive(); await call('apiSaveConfig', S.config, choreEvents()); DV.lastChoreSync = TODAY(); saveDev(); }
     const ids = new Set((j.log||[]).map(e=>e.id));
     S.log = (j.log||[]).concat(S.outbox.filter(e=>!ids.has(e.id)));
