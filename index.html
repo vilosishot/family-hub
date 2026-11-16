@@ -448,7 +448,11 @@ function repeatText(c){
   return t;
 }
 const fmtT = s => { if (!s) return ''; const [h,m] = s.split(':').map(Number); return `${(h%12)||12}:${pad(m)}${h<12?'am':'pm'}`; };
-const status = c => arr(c.assign).length ? 'assigned' : (c.pool===true||c.pool==='TRUE') ? 'pool' : 'off';
+// "Different person on different days": rotate = "1:ender;2:reiden;3:ender+reiden" (day number 0=Sun … 6=Sat)
+function rotOf(c){ if (!c.rotate) return null; const m = {}; String(c.rotate).split(';').forEach(x => { const [d, w] = x.split(':'); if (w) m[Number(d)] = w.split('+').filter(Boolean); }); return Object.keys(m).length ? m : null; }
+const whoOn = (c, d) => { const r = rotOf(c); return r ? (r[d.getDay()] || []) : arr(c.assign); };
+const rotText = c => { const r = rotOf(c); if (!r) return ''; return [1,2,3,4,5,6,0].filter(d => r[d]).map(d => `${DOW[d]} ${r[d].map(id => P(id)?.name || id).join(' & ')}`).join(' · '); };
+const status = c => (rotOf(c) || arr(c.assign).length) ? 'assigned' : (c.pool===true||c.pool==='TRUE') ? 'pool' : 'off';
 const isPool = c => status(c)==='pool';
 
 // ---------- history → current state ----------
@@ -493,7 +497,7 @@ function derive(){
 }
 function listFor(p, d){ // chores a person has on a day
   const ds = ymd(d);
-  const mine = cfg().chores.filter(c => arr(c.assign).includes(p.id) && !['extra','asneeded'].includes(c.freq) && occurs(c,d));
+  const mine = cfg().chores.filter(c => !['extra','asneeded'].includes(c.freq) && whoOn(c,d).includes(p.id) && occurs(c,d));
   const taken = cfg().chores.filter(c => { const k = D.pool[ds+'|'+c.id]; return k && k.taker===p.id; });
   return mine.map(c => ({c, d:D.done.has(key(ds,p.id,c.id))})).concat(taken.map(c => ({c, d:!!D.pool[ds+'|'+c.id].doneBy, pool:true})))
     .map(x => (x.g = x.pool ? 'chores' : (x.c.freq==='daily' ? (x.c.slot==='anytime'?'afternoon':x.c.slot) : 'chores'), x));
@@ -501,7 +505,7 @@ function listFor(p, d){ // chores a person has on a day
 function weekStats(p, ws){
   let possible=0, earned=0, due=0; const t = TODAY(), sd = ST().startDate;
   for (let i=0;i<7;i++){ const day = addDays(ws,i), ds = ymd(day); if (sd && ds < sd) continue;
-    for (const c of cfg().chores){ if (!arr(c.assign).includes(p.id) || ['extra','asneeded','after'].includes(c.freq) || !occurs(c,day)) continue;
+    for (const c of cfg().chores){ if (['extra','asneeded','after'].includes(c.freq) || !whoOn(c,day).includes(p.id) || !occurs(c,day)) continue;
       const pts = Number(c.points)||0; possible += pts; if (ds < t) due += pts; if (D.done.has(key(ds,p.id,c.id))) earned += pts; } }
   return {possible, earned, due, pct: possible ? Math.round(earned/possible*100) : 0};
 }
@@ -517,7 +521,7 @@ function normalize(c){
   for (const k of ['people','chores','sched','rewards']) if (!Array.isArray(c[k]) || !c[k].length) c[k] = d[k];
   c.settings = Object.assign({}, d.settings, c.settings||{});
   for (const k of ['tiers','jars','gateSlots']) if (typeof c.settings[k]==='string') try { c.settings[k] = JSON.parse(c.settings[k]); } catch(e){ c.settings[k] = d.settings[k]; }
-  c.chores.forEach(x => { x.days = arr(x.days); x.months = arr(x.months); x.assign = arr(x.assign).map(String); x.pool = x.pool===true||x.pool==='TRUE'; x.active = !(x.active===false||x.active==='FALSE'); x.every = num(x.every)||1; });
+  c.chores.forEach(x => { x.rotate = x.rotate ? String(x.rotate) : ''; x.days = arr(x.days); x.months = arr(x.months); x.assign = arr(x.assign).map(String); x.pool = x.pool===true||x.pool==='TRUE'; x.active = !(x.active===false||x.active==='FALSE'); x.every = num(x.every)||1; });
   c.sched.forEach(b => { b.days = arr(b.days); b.who = arr(b.who).map(String); });
   c.people.forEach(p => { p.kid = p.kid===true||p.kid==='TRUE'; p.bday = String(p.bday||'').slice(0,10); });
   c.rewards.forEach(r => { r.active = !(r.active===false||r.active==='FALSE'); });
@@ -661,15 +665,15 @@ function vToday(){
   const kids = cfg().people.filter(p=>p.kid);
   const xcard = c => `<div class="pc"><div class="top"><span class="e">${c.emoji}</span><span class="t">${esc(c.title)}<small>☆ ${c.points} stars</small></span></div><div class="acts">${kids.map(k=>{const n=D.extraCount[key(ds,k.id,c.id)]||0;return `<button ${pvx(k,'btn sm'+(n?' light':''))} style="${n?'':'background:var(--c);color:#fff'}" data-a="extra" data-c="${c.id}" data-p="${k.id}">${n?'✓ ':''}${esc(k.name)}</button>`;}).join('')}</div></div>`;
   const lt = cfg().chores.filter(c => c.cat==='laundry' && c.freq!=='extra' && status(c)!=='off' && occurs(c,t));
-  const lstate = c => isPool(c) ? !!(D.pool[ds+'|'+c.id]||{}).doneBy : arr(c.assign).every(id => D.done.has(key(ds,id,c.id)));
+  const lstate = c => isPool(c) ? !!(D.pool[ds+'|'+c.id]||{}).doneBy : whoOn(c,t).every(id => D.done.has(key(ds,id,c.id)));
   const laundry = lt.length ? `<div class="box" style="margin:0 0 16px;border:2px solid var(--accent)"><h2>🧺 Laundry ${isToday?'today':DOWL[t.getDay()]} <span class="hint">${lt.filter(lstate).length}/${lt.length} done</span></h2>
-    <div class="chips" style="margin-top:10px">${lt.map(c => { const who = arr(c.assign).map(P).filter(Boolean), q = who[0] || (D.pool[ds+'|'+c.id]?.taker && P(D.pool[ds+'|'+c.id].taker));
+    <div class="chips" style="margin-top:10px">${lt.map(c => { const who = whoOn(c,t).map(P).filter(Boolean), q = who[0] || (D.pool[ds+'|'+c.id]?.taker && P(D.pool[ds+'|'+c.id].taker));
       return `<button ${q?pvx(q,'pill'+(lstate(c)?' on':'')):`class="pill ${lstate(c)?'on':''}"`} data-a="details" data-c="${c.id}" data-p="${q?q.id:''}">${lstate(c)?'✓ ':''}${c.emoji} ${esc(c.title)} · ${who.length?who.map(x=>esc(x.name)).join(' & '):q?esc(q.name):'anyone'}</button>`; }).join('')}</div></div>` : '';
   const missed = [];
   for (let i=1; i<=6 && isToday; i++){ const dd = addDays(t,-i), mds = ymd(dd); if (ST().startDate && mds < ST().startDate) continue;
     cfg().chores.forEach(c => { if (!['weekly','monthly'].includes(c.freq) || status(c)==='off' || !occurs(c,dd)) return;
       if (isPool(c)) { if (!(D.pool[mds+'|'+c.id]||{}).doneBy) missed.push({c, date:mds}); }
-      else arr(c.assign).forEach(id => { if (P(id) && !D.done.has(key(mds,id,c.id))) missed.push({c, date:mds, pid:id}); }); }); }
+      else whoOn(c,dd).forEach(id => { if (P(id) && !D.done.has(key(mds,id,c.id))) missed.push({c, date:mds, pid:id}); }); }); }
   const mcard = ({c,date,pid}) => { const q = pid && P(pid), day = DOWL[pd(date).getDay()];
     return `<div ${q?pvx(q,'pc'):'class="pc"'} style="${q?'border-color:var(--c)':''}"><button class="top" data-a="details" data-c="${c.id}"><span class="e">${c.emoji}</span><span class="t">${esc(c.title)}<small>↩️ Missed ${day}${q?' · '+esc(q.name):' · family pool'}</small></span></button>
       <div class="acts">${q?`<button class="btn sm" ${pvx(q,'btn sm')} style="background:var(--c);color:#fff" data-a="tick" data-c="${c.id}" data-p="${q.id}" data-date="${date}">✓ ${esc(q.name)} did it</button>`:`<button class="btn sm" data-a="pick" data-c="${c.id}" data-m="done" data-date="${date}">✓ Done by…</button>`}</div></div>`; };
@@ -694,13 +698,14 @@ function vChores(){
 function libRow(c){
   return `<div class="li" style="${c.active?'':'opacity:.5'}"><span class="e">${c.emoji}</span>
       <button class="t" data-a="edit" data-c="${c.id}">${esc(c.title)}<small>${c.cat==='laundry'?'<span class="tag">🧺 Laundry</span>':''}${String(c.rec).includes('r')?'<span class="tag tr">ReiRei</span>':''}${String(c.rec).includes('e')?'<span class="tag te">Ender</span>':''}${String(c.rec).includes('a')?'<span class="tag ta">Grown-ups</span>':''}${esc(repeatText(c))}${c.freq==='asneeded'||String(c.rec)==='a'?'':Number(c.points)?` · ${levelName(c)} (${c.freq==='extra'?'☆ '+c.points+' stars':c.points+' pts'})`:' · 💛 No pay · just what we do'}</small></button>
-      <span class="as">${cfg().people.map(p=>`<button ${pvx(p,'ab'+(arr(c.assign).includes(p.id)?' on':''))} data-a="assign" data-c="${c.id}" data-p="${p.id}">${esc(p.name)}</button>`).join('')}<button class="ab abpool ${isPool(c)?'on':''}" data-a="assign" data-c="${c.id}" data-p="pool">🙋 Pool</button></span></div>`;
+      ${rotOf(c) ? `<button class="ab" style="max-width:420px;white-space:normal;height:auto;padding:6px 12px;text-align:left" data-a="edit" data-c="${c.id}">🔁 ${esc(rotText(c))}</button>` :
+      `<span class="as">${cfg().people.map(p=>`<button ${pvx(p,'ab'+(arr(c.assign).includes(p.id)?' on':''))} data-a="assign" data-c="${c.id}" data-p="${p.id}">${esc(p.name)}</button>`).join('')}<button class="ab abpool ${isPool(c)?'on':''}" data-a="assign" data-c="${c.id}" data-p="pool">🙋 Pool</button></span>`}</div>`;
 }
 function libList(){
   const q = U.q.trim().toLowerCase();
   let list = cfg().chores.filter(c => U.lib==='all' || (U.lib==='laundry' ? c.cat==='laundry' : U.lib==='extra' ? c.freq==='extra' : c.freq!=='extra' && String(c.rec).includes(U.lib)));
   if (U.libStatus!=='all') list = list.filter(c => status(c)===U.libStatus);
-  if (q) list = list.filter(c => [c.title, c.how, c.emoji, repeatText(c), arr(c.assign).map(id=>P(id)?.name||'').join(' '), isPool(c)?'pool family':'', c.cat].join(' ').toLowerCase().includes(q));
+  if (q) list = list.filter(c => [c.title, c.how, c.emoji, repeatText(c), rotText(c), arr(c.assign).map(id=>P(id)?.name||'').join(' '), isPool(c)?'pool family':'', c.cat].join(' ').toLowerCase().includes(q));
   if (!list.length) return `<div class="lib"><div class="li"><span class="hint">No chores match${q?` "${esc(U.q)}"`:''}.</span></div></div>`;
   const head = `<p class="hint" style="margin:0 0 8px">${list.length} chore${list.length===1?'':'s'}. Tap a chore to edit it; tap a name to give it to someone.</p>`;
   if (U.sort==='group'){
@@ -717,18 +722,19 @@ function libList(){
 }
 const chipRow = (name, opts, sel) => `<div class="chips" data-group="${name}">${opts.map(([v,l,p,bg])=>`<button type="button" ${p?pvx(p,'chipb'+(sel.includes(v)?' on':'')):`class="chipb ${sel.includes(v)?'on':''}"`} ${bg?`style="background:${bg};border-color:${bg};color:#fff;${sel.includes(v)?'box-shadow:0 0 0 3px var(--ink)':''}"`:''} data-a="chip" data-v="${v}">${l}</button>`).join('')}</div>`;
 const chipVals = g => [...document.querySelectorAll(`[data-group="${g}"] .chipb.on`)].map(b=>b.dataset.v);
-const SINGLE = ['freq','slot','week','bcolor','mmode','bkind','gdur'];
+const SINGLE = ['freq','slot','week','bcolor','mmode','bkind','gdur','whomode'];
 
 /* Skylight-style chore details: tap a chore to see it, mark it done, read it aloud, edit or delete. */
 function details(cid, pid){
   const c = cfg().chores.find(x=>x.id===cid); if (!c) return;
   const p = pid && P(pid), ds = TODAY(), pk = D.pool[ds+'|'+c.id];
   const done = p ? (isPool(c) ? !!(pk && pk.doneBy) : D.done.has(key(ds,p.id,c.id))) : false;
-  const who = arr(c.assign).map(id=>P(id)).filter(Boolean);
+  const who = (rotOf(c) ? whoOn(c, now()) : arr(c.assign)).map(id=>P(id)).filter(Boolean);
   const weekly = c.freq==='weekly';
   modal(`<div class="big">${c.emoji}</div><h2 style="text-align:center;margin-top:6px">${esc(c.title)}</h2>
     <p class="hint" style="text-align:center;margin:-6px 0 10px">${esc(repeatText(c))}${String(c.rec)==='a'||c.freq==='asneeded'?'':c.freq==='extra'?` · earns ☆ ${c.points}`:Number(c.points)?` · ${c.points} pts toward allowance`:' · 💛 just what we do'}</p>
     ${c.how?`<p style="font-weight:700;text-align:center;font-size:17px">${esc(c.how)}</p>`:''}
+    ${rotOf(c)?`<p class="hint" style="text-align:center">🔁 ${esc(rotText(c))}</p>`:''}
     <div class="chips" style="justify-content:center;margin:10px 0">${who.length?who.map(q=>`<span ${pvx(q,'chipb p on')} style="display:inline-flex;align-items:center">${esc(q.name)}</span>`).join(''):'<span class="chipb on">🙋 Family pool</span>'}</div>
     <div class="mact" style="justify-content:center"><button class="btn light" data-a="speak" data-t="${esc(c.title+'. '+(c.how||''))}">🔊 Read it to me</button>
       ${p && !isPool(c)?`<button class="btn ${done?'light':'good'}" data-a="tick" data-c="${c.id}" data-p="${p.id}" data-close="1">${done?'Undo':'✓ Mark done'}</button>`:''}</div>
@@ -740,7 +746,10 @@ function editChore(id){
   modal(`<h2>${id==='new'?'New chore':'Edit chore'}</h2>
     <div class="g3"><label class="fl">Picture<input id="f_emoji" value="${esc(c.emoji)}" maxlength="4" style="font-size:24px;text-align:center"></label><label class="fl">Chore<input id="f_title" value="${esc(c.title)}" placeholder="e.g. Water the garden"></label></div>
     <label class="fl">Description / how to do it<textarea id="f_how" placeholder="Shown to the kids and read aloud">${esc(c.how)}</textarea></label>
-    <div class="fl">Who does it${chipRow('assign', cfg().people.map(p=>[p.id,p.name,p]).concat([['pool','🙋 Family pool']]), arr(c.assign).length?arr(c.assign):c.pool?['pool']:[])}</div>
+    <div class="fl">Who does it${chipRow('whomode', [['same','Same people every time'],['byday','🔁 Different person on different days']], [rotOf(c)?'byday':'same'])}</div>
+    <div id="assignbox" style="${rotOf(c)?'display:none':''}"><div class="fl">${chipRow('assign', cfg().people.map(p=>[p.id,p.name,p]).concat([['pool','🙋 Family pool']]), arr(c.assign).length?arr(c.assign):c.pool?['pool']:[])}</div></div>
+    <div id="rotbox" style="${rotOf(c)?'':'display:none'}">${[1,2,3,4,5,6,0].map(d => `<div class="inl" style="margin-bottom:6px"><span style="width:44px">${DOWL[d].slice(0,3)}</span>${chipRow('rot_'+d, cfg().people.map(p=>[p.id,p.name,p]), (rotOf(c)||{})[d]||[])}</div>`).join('')}
+      <p class="hint" style="margin:4px 0 10px">Leave a day empty to skip it. Example: Set the table: Mon/Wed/Fri Ender, Tue/Thu ReiRei.</p></div>
     <div class="part"><div class="fl">Repeats${chipRow('freq', Object.entries(REPEAT), [c.freq])}</div>
       <div id="rp"></div></div>
     <div class="part"><div class="fl">Time of day${chipRow('slot', Object.entries(SLOTS).map(([k,v])=>[k,v[1]]), [c.slot])}</div>
@@ -825,14 +834,14 @@ function vCal(){
   return `<div class="bar"><h1 class="title">This week</h1>${S.calUrl?`<a class="btn light sm" href="${esc(S.calUrl)}" target="_blank">Open in Google Calendar</a>`:''}<button class="btn sm" data-a="addevent">+ Event</button></div>
     ${S.calError?`<div class="banner">Calendar problem: ${esc(S.calError)}</div>`:''}
     <div class="wk">${[0,1,2,3,4,5,6].map(i=>{ const d = addDays(mon,i), ds = ymd(d), dow = d.getDay();
-    const ch = cfg().chores.filter(c => status(c)!=='off' && !['daily','extra','asneeded'].includes(c.freq) && occurs(c,d) && (U.who==='all' || arr(c.assign).includes(U.who) || isPool(c)));
+    const ch = cfg().chores.filter(c => status(c)!=='off' && !['daily','extra','asneeded'].includes(c.freq) && occurs(c,d) && (U.who==='all' || whoOn(c,d).includes(U.who) || isPool(c)));
     const ev = S.events.filter(e => !(e.tag||'').startsWith('chore:') && !(e.tag||'').startsWith('block:') && (e.allDay ? (ymd(new Date(e.start))<=ds && ds<ymd(new Date(e.end))) : ymd(new Date(e.start))===ds));
     const bl = cfg().sched.filter(b=>b.days.includes(dow) && b.who.length>=3 && U.who==='all');
-    const doneBy = c => { if (isPool(c)) return D.pool[ds+'|'+c.id]?.doneBy; return arr(c.assign).every(id=>D.done.has(key(ds,id,c.id))); };
+    const doneBy = c => { if (isPool(c)) return D.pool[ds+'|'+c.id]?.doneBy; return whoOn(c,d).every(id=>D.done.has(key(ds,id,c.id))); };
     return `<div class="day ${ds===TODAY()?'today':''}"><h3>${d.toLocaleDateString([],{weekday:'short'})} <b>${d.getDate()}</b></h3>
       ${ev.map(e=>`<div class="ev" style="--c:${e.color||'#7a8592'}">📅 ${esc(e.title)}<small>${e.allDay?'All day':new Date(e.start).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})} · ${esc(e.cal)}</small></div>`).join('')}
       ${bl.map(b=>`<div class="ev" style="--c:#8a827a">${b.emoji} ${esc(b.title)}<small>${fmtT(b.start)}</small></div>`).join('')}
-      ${ch.map(c=>{const p=arr(c.assign)[0]&&P(arr(c.assign)[0]);return `<button class="ev chore ${doneBy(c)?'dn':''}" style="--c:${p?col(p):'#8a827a'}" data-a="details" data-c="${c.id}">${c.emoji} ${esc(c.title)}<small>${arr(c.assign).length?arr(c.assign).map(id=>P(id)?.name).join(' & '):'Family pool'}</small></button>`;}).join('')}</div>`; }).join('')}</div>`;
+      ${ch.map(c=>{const w=whoOn(c,d), p=w[0]&&P(w[0]);return `<button class="ev chore ${doneBy(c)?'dn':''}" style="--c:${p?col(p):'#8a827a'}" data-a="details" data-c="${c.id}">${c.emoji} ${esc(c.title)}<small>${w.length?w.map(id=>P(id)?.name).join(' & '):'Family pool'}</small></button>`;}).join('')}</div>`; }).join('')}</div>`;
 }
 function vRewards(){
   const kids = cfg().people.filter(p=>p.kid && (U.who==='all'||U.who===p.id||narrow()));
@@ -1038,7 +1047,7 @@ const A = {
     log({kid:d.p, type:'jar', jar:'save', money:m, title:`Parent match ${ST().matchPct}%`, by:'parent'}); toast(`Save jar grew by ${money(m)}!`); confetti(col(P(d.p))); render(); }),
   goal: d => needParent(() => { const k = P(d.p); k.goal = $('#goal_'+d.p).value; k.goalCost = $('#goalc_'+d.p).value; saveConfig('Goal saved'); render(); }),
   lib: d => { U.lib = d.k; }, libs: d => { U.libStatus = d.k; },
-  assign: d => needParent(() => { const c = cfg().chores.find(x=>x.id===d.c);
+  assign: d => needParent(() => { const c = cfg().chores.find(x=>x.id===d.c); if (rotOf(c)) return editChore(c.id);
     if (d.p==='pool'){ const was = isPool(c); c.assign = []; c.pool = !was; }
     else { c.assign = arr(c.assign).includes(d.p) ? arr(c.assign).filter(x=>x!==d.p) : arr(c.assign).concat(d.p); if (c.assign.length) c.pool = false; }
     render(); clearTimeout(A._t); A._t = setTimeout(()=>saveConfig('Saved'), 1500); }),
@@ -1051,6 +1060,7 @@ const A = {
     if (g==='freq'){ const id = $('[data-a=savechore]').dataset.c; const base = id==='new' ? {days:[now().getDay()], every:1, week:1, afterDays:7, date:TODAY()} : cfg().chores.find(x=>x.id===id); drawRepeat(Object.assign({}, base, {freq:d.v})); }
     if (g==='freq' && $('#lvl')) $('#lvl').innerHTML = levelChips({freq:d.v, points:Number($('#f_points').value)});
     if (g==='mmode') monthMode();
+    if (g==='whomode'){ const by = d.v==='byday'; $('#rotbox').style.display = by?'':'none'; $('#assignbox').style.display = by?'none':''; }
     return 'skip'; },
   lvl: (d, el) => { $('#f_points').value = d.n; el.parentElement.querySelectorAll('.chipb').forEach(b=>b.classList.toggle('on', b===el)); return 'skip'; },
   savechore: d => { const title = $('#f_title').value.trim(); if (!title){ toast('Give the chore a name'); return 'skip'; }
@@ -1061,7 +1071,14 @@ const A = {
     if (freq==='once') v.date = g('f_date') || TODAY();
     if (freq==='after') v.afterDays = Math.max(1, Number(g('f_after'))||7);
     if (freq==='monthly'){ if (chipVals('mmode')[0]==='date'){ v.monthDay = Number(g('f_mday'))||1; v.days = []; } else { v.monthDay = ''; v.week = Number(chipVals('week')[0]||1); v.days = v.days.slice(0,1); if (!v.days.length) v.days = [6]; } }
-    if (freq==='weekly' && !v.days.length){ toast('Pick at least one day'); return 'skip'; }
+    v.rotate = '';
+    if (chipVals('whomode')[0]==='byday'){
+      const m = [0,1,2,3,4,5,6].map(dd => [dd, chipVals('rot_'+dd)]).filter(([,w]) => w.length);
+      if (!m.length){ toast('Pick who does it on at least one day'); return 'skip'; }
+      v.rotate = m.map(([dd,w]) => dd+':'+w.join('+')).join(';'); v.assign = [...new Set(m.flatMap(([,w])=>w))]; v.pool = false;
+      if (['daily','weekly'].includes(freq)){ v.freq = 'weekly'; v.days = m.map(([dd])=>dd); }
+    }
+    if (v.freq==='weekly' && !v.days.length){ toast('Pick at least one day'); return 'skip'; }
     if (d.c==='new') cfg().chores.unshift(Object.assign({id:'c'+uid(), week:1, monthDay:'', date:'', afterDays:7, cat: U.lib==='laundry'?'laundry':''}, v)); else Object.assign(cfg().chores.find(x=>x.id===d.c), v);
     modal(''); saveConfig(d.c==='new'?'Chore added':'Chore saved'); },
   delchore: d => needParent(() => { if (!confirm('Delete this chore?')) return; S.config.chores = cfg().chores.filter(x=>x.id!==d.c); modal(''); saveConfig('Chore deleted'); render(); }),
