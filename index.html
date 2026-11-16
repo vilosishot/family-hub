@@ -69,7 +69,8 @@ textarea{height:70px;padding:10px 12px}
 .days .pill b{font-size:16px}
 .plan{margin:10px 2px 4px;border-radius:16px;background:var(--card);padding:8px 12px}
 .plan .r{display:flex;gap:8px;font-size:13px;font-weight:800;padding:4px 0;border-top:1px solid var(--line)} .plan .r:first-child{border-top:0}
-.plan .r .tm{width:66px;flex:none;color:var(--muted)} .plan .r.now{color:var(--c)} .plan .r.gc{color:var(--muted)}
+.plan .r .tm{width:58px;flex:none;color:var(--muted);font-size:12px;padding-top:1px} .plan .r.cur{color:var(--c);background:color-mix(in srgb,var(--c) 12%,transparent);border-radius:10px;margin:0 -6px;padding:4px 6px} .plan .r.past{opacity:.45} .plan .r.gc{color:var(--muted)}
+.plan .more{display:block;width:100%;text-align:center;font-size:12px;font-weight:800;color:var(--muted);padding:6px 0 2px;border-top:1px solid var(--line)}
 .ck[disabled]{opacity:.35}
 .play{margin:10px 2px 6px;border-radius:18px;background:var(--card);padding:12px 14px;box-shadow:var(--shadow)}
 .play .pt{display:flex;align-items:center;gap:10px;font-family:var(--serif);font-size:22px}
@@ -79,7 +80,8 @@ textarea{height:70px;padding:10px 12px}
 .play .pbar span{position:absolute;inset:0;display:grid;place-items:center;font-weight:800;font-size:13px}
 .play.open{background:color-mix(in srgb,var(--good) 14%,var(--card))} .play.open .pbar i{background:var(--good)}
 .privs{display:flex;gap:6px;flex-wrap:wrap}
-.priv{font-size:12.5px;font-weight:800;border-radius:12px;padding:5px 9px;background:var(--chip);color:var(--muted)}
+.priv{font-size:12.5px;font-weight:800;border-radius:12px;padding:5px 9px;background:var(--chip);color:var(--muted);white-space:nowrap}
+.privs{flex-wrap:nowrap} .privs .priv{flex:1;text-align:center;padding:6px 4px} .privs .priv .pl{display:none} @media (min-width:1500px){.privs .priv .pl{display:inline}}
 .priv.on{background:color-mix(in srgb,var(--good) 20%,var(--card));color:var(--good)} .priv.no{background:color-mix(in srgb,var(--bad) 16%,var(--card));color:var(--bad)}
 .gate{margin:8px 2px 4px;border-radius:14px;background:var(--card);padding:9px 12px;font-weight:800;font-size:14px;color:var(--muted)}
 .gate.open{color:var(--good);background:color-mix(in srgb,var(--good) 15%,var(--card))}
@@ -464,10 +466,10 @@ function groundsFor(pid){ const t = TODAY(), out = {}; (D.grounds||[]).forEach(g
 const untilText = u => !u ? 'until lifted' : u===TODAY() ? 'today' : 'until ' + pd(u).toLocaleDateString([], {weekday:'short', month:'short', day:'numeric'});
 function playtime(p, list){
   const gl = list.filter(x => arr(ST().gateSlots).includes(x.g)), done = gl.filter(x=>x.d).length, open = done === gl.length, g = groundsFor(p.id), pct = gl.length ? done/gl.length*100 : 100;
-  const privs = PRIVS.map(([k,e,l]) => g[k] ? `<span class="priv no" title="${esc(g[k].reason||'')}">⛔ ${e} ${l} · grounded ${untilText(g[k].until)}</span>` : `<span class="priv ${open?'on':''}">${open?'🔓':'🔒'} ${e} ${l}</span>`).join('');
+  const privs = PRIVS.map(([k,e,l]) => g[k] ? `<span class="priv no" title="${esc(l+' · grounded '+untilText(g[k].until)+(g[k].reason?' · '+g[k].reason:''))}">⛔ ${e}<span class="pl"> ${l}</span></span>` : `<span class="priv ${open?'on':''}" title="${l}">${open?'🔓':'🔒'} ${e}<span class="pl"> ${l}</span></span>`).join('');
   const allGrounded = PRIVS.every(([k]) => g[k]);
   return `<div class="play ${open && !allGrounded ? 'open' : ''}"><div class="pt"><span class="em">${allGrounded?'⛔':open?'🎉':'🔒'}</span>Playtime<small>${open ? (allGrounded?'Chores done · grounded':'Unlocked!') : `${gl.length-done} more to go`}</small></div>
-    <div class="pbar"><i style="width:${pct}%"></i><span>${done} / ${gl.length} chores</span></div><div class="privs">${privs}</div></div>`;
+    <div class="pbar"><i style="width:${pct}%"></i><span>${done} / ${gl.length} chores</span></div><div class="privs">${privs}</div>${Object.keys(g).length?`<div class="hint" style="margin-top:6px;color:var(--bad);font-weight:800">⛔ Grounded: ${PRIVS.filter(([k])=>g[k]).map(([k,,l])=>l.toLowerCase()+' '+untilText(g[k].until)).join(' · ')}</div>`:''}</div>`;
 }
 function derive(){
   const st = {}; for (const e of S.log) if (e.type==='approve'||e.type==='reject') st[e.ref] = e.type;
@@ -536,7 +538,7 @@ function migrate2(){
   Object.assign(ST(), {starsPerDollar: ST().starsPerDollar||10, demeritCap: ST().demeritCap||15, libVersion:3});
   setTimeout(() => saveConfig('Updated chore pay'), 500);
 }
-const BUILD = 'b1794867629';
+const BUILD = 'b1794867908';
 const API_URL = 'https://script.google.com/macros/s/AKfycbyoX9RyIVAe9s1XqT2HSGd_3TQNCSMhimvJiXeCruDh_SXKNd1rlByP81FuXellq3ki/exec';
 function apiKey(){ const q = new URLSearchParams(location.search).get('key'); if (q){ localStorage.setItem('familyhub.key', q); history.replaceState(null,'',location.pathname); } return localStorage.getItem('familyhub.key') || ''; }
 function call(fn, ...args){
@@ -647,7 +649,14 @@ function vToday(){
       return `<button class="ring ${sel===g?'on':''}" data-a="ring" data-p="${p.id}" data-g="${g}"><span class="c" style="--pc:${pc}"><span>${i}</span></span>${l}</button>`; }).join('');
     const gate = p.kid && isToday ? playtime(p, list) : '';
     const nowHM = `${pad(now().getHours())}:${pad(now().getMinutes())}`;
-    const plan = (U.plan || !isToday) ? `<div class="plan">${dayBlocks(p, t).map(b => `<div class="r ${b.google?'gc':''} ${isToday && b.start<=nowHM && nowHM<b.end?'now':''}"><span class="tm">${fmtT(b.start)}</span><span>${b.emoji} ${esc(b.title)}</span></div>`).join('') || '<div class="hint">Nothing scheduled.</div>'}</div>` : '';
+    let plan = '';
+    if (U.plan || !isToday){
+      const all = dayBlocks(p, t), full = !isToday || U.planAll;
+      let first = all.findIndex(b => b.end > nowHM); if (first < 0) first = all.length;
+      const show = full ? all : all.slice(first, first + 4);
+      const row = b => `<div class="r ${b.google?'gc':''} ${isToday && b.start<=nowHM && nowHM<b.end?'cur':''} ${isToday && full && b.end<=nowHM?'past':''}"><span class="tm">${fmtT(b.start)}</span><span>${b.emoji} ${esc(b.title)}</span></div>`;
+      plan = `<div class="plan">${show.map(row).join('') || `<div class="hint">${all.length?'Done for the day.':'Nothing scheduled.'}</div>`}${isToday && all.length > show.length || (isToday && U.planAll) ? `<button class="more" data-a="planall">${U.planAll?'Show just what\'s next':`Show the whole day (${all.length})`}</button>` : ''}</div>`;
+    }
     const w = p.kid ? weekStats(p, weekStart(t)) : null;
     const wk = w && w.possible ? `<div class="wkbar">This week: ${w.earned}/${w.possible} points (${w.pct}%) · allowance ${money(baseAllowance(p,t))}<div class="b"><i style="width:${w.pct}%"></i></div></div>` : '';
     const secs = GROUPS.filter(([g]) => !sel || sel===g).map(([g,,l]) => {
@@ -1013,7 +1022,7 @@ const A = {
   cards: d => needParent(() => { ST().cards = d.v; saveConfig(); render(); }),
   me: d => { DV.me = DV.me===d.p ? '' : d.p; saveDev(); toast(DV.me ? `This device opens on ${P(d.p).name}` : 'Cleared'); },
   ring: d => { U.ring[d.p] = U.ring[d.p]===d.g ? null : d.g; },
-  off: d => { U.off = Number(d.n); }, plan: () => { U.plan = !U.plan; },
+  off: d => { U.off = Number(d.n); }, plan: () => { U.plan = !U.plan; }, planall: () => { U.planAll = !U.planAll; },
   close: (d, el, ev) => { if (d.self && ev.target!==el) return 'skip'; modal(''); return 'skip'; },
   pin: d => {
     if (d.n==='✕'){ modal(''); return 'skip'; }
