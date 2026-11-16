@@ -385,7 +385,7 @@ const DEFAULTS = {
 
 // ---------- state ----------
 const LS = 'familyhub.v3', DEV = 'familyhub.device';
-let S = {config:null, log:[], outbox:[], events:[], calUrl:'', calError:''};
+let S = {config:null, base:null, cfgOut:[], log:[], outbox:[], events:[], calUrl:'', calError:''};
 let DV = Object.assign({theme:'light', me:'', lastChoreSync:''}, JSON.parse(localStorage.getItem(DEV)||'{}'));
 const U = {room:'all', q:'', sort:'group', off:0, plan:false, view:'today', who:'all', ring:{}, lib:'all', libStatus:'all', day:new Date().getDay(), ptab:'chores', parentUntil:0};
 let D = null, remote = 'local';
@@ -519,7 +519,7 @@ function payFor(p, ws){ const w = weekStats(p, ws), base = baseAllowance(p, addD
 
 // ---------- saving & Google ----------
 function syncDot(s){ const el = $('#sync'); el.className = 'sync '+(s||''); el.title = {ok:'Saved to Google',busy:'Saving…',err:"Can't reach Google — will retry",'':'Saved on this device only'}[s||'']; }
-function store(){ try { localStorage.setItem(LS, JSON.stringify({config:S.config, log:S.log, outbox:S.outbox})); } catch(e){} }
+function store(){ try { localStorage.setItem(LS, JSON.stringify({config:S.config, base:S.base, cfgOut:S.cfgOut, log:S.log, outbox:S.outbox})); } catch(e){} }
 function normalize(c){
   const d = JSON.parse(JSON.stringify(DEFAULTS)); c = c || d;
   for (const k of ['people','chores','sched','rewards']) if (!Array.isArray(c[k]) || !c[k].length) c[k] = d[k];
@@ -538,7 +538,7 @@ function migrate2(){
   Object.assign(ST(), {starsPerDollar: ST().starsPerDollar||10, demeritCap: ST().demeritCap||15, libVersion:3});
   setTimeout(() => saveConfig('Updated chore pay'), 500);
 }
-const BUILD = 'b1794867908';
+const BUILD = 'b1794868832';
 const API_URL = 'https://script.google.com/macros/s/AKfycbyoX9RyIVAe9s1XqT2HSGd_3TQNCSMhimvJiXeCruDh_SXKNd1rlByP81FuXellq3ki/exec';
 function apiKey(){ const q = new URLSearchParams(location.search).get('key'); if (q){ localStorage.setItem('familyhub.key', q); history.replaceState(null,'',location.pathname); } return localStorage.getItem('familyhub.key') || ''; }
 function call(fn, ...args){
@@ -562,7 +562,7 @@ async function pull(first){
     if (j.build && j.build !== BUILD && !S.outbox.length){        // a newer version was published: reload into it (once)
       const r = JSON.parse(sessionStorage.getItem('fh.reload') || '{}'), n = r.b === j.build ? r.n || 0 : 0;
       if (n < 4 && (r.b !== j.build || Date.now() - r.t > 120000)){ sessionStorage.setItem('fh.reload', JSON.stringify({b:j.build, n:n+1, t:Date.now()})); store(); location.reload(); return; } }
-    if (j.config){ S.config = normalize(j.config); if ((Number(ST().libVersion)||1) < 3) migrate2(); if ((Number(ST().libVersion)||1) < 4){ if (String(ST().pin)==='1234') ST().pin = '8057'; ST().libVersion = 4; setTimeout(() => saveConfig('PIN updated'), 800); }
+    if (j.config){ S.config = normalize(j.config); S.base = clone(S.config); S.cfgOut.forEach(x => applyPatch(S.config, x)); if (S.cfgOut.length) normalize(S.config); if ((Number(ST().libVersion)||1) < 3) migrate2(); if ((Number(ST().libVersion)||1) < 4){ if (String(ST().pin)==='1234') ST().pin = '8057'; ST().libVersion = 4; setTimeout(() => saveConfig('PIN updated'), 800); }
       if ((Number(ST().libVersion)||1) < 5){ const drop = ['Match socks from the laundry','Fold & put away my laundry','Put clean clothes in my drawers','Laundry: wash, dry, fold'];
         S.config.chores = cfg().chores.filter(c => !drop.includes(c.title)); const have = new Set(cfg().chores.map(c=>c.id));
         S.config.chores = JSON.parse(JSON.stringify(LAUNDRY.filter(c=>!have.has(c.id)))).concat(cfg().chores); normalize(S.config); ST().libVersion = 5; }
@@ -574,7 +574,7 @@ async function pull(first){
       if ((Number(ST().libVersion)||1) < 9){ const NM = {"cmwispbrw7xfh1": ["🪜", "Clear the stairs", null], "cmwisokw7ac62s": ["🧸", "Pick up the floor", null], "cmwir2qlsxftco": ["🍽️", "Help unload the dishwasher", null], "cmwir2fr5zbwey": ["🍽️", "Help load the dishwasher", null], "cmwir1kmxm3e43": ["🍽️", "Unload the dishwasher", null], "cmwir1827g668j": ["🫧", "Load the dishwasher", null], "cmwiqy03drl82g": ["🧸", "Tidy up (10 min)", null], "lb1": ["🧺", "Bring my hamper down", "Laundry Room"], "lb2": ["🎨", "Sort lights & darks", "Laundry Room"], "lb3": ["🫧", "Wash & dry the boys' laundry", "Laundry Room"], "lb4": ["👕", "Put away my clothes", "Boys' Room"], "lb5": ["🧦", "Match my socks", "Boys' Room"], "lb6": ["🛁", "Fold the bath towels", "Laundry Room"], "lb7": ["🧽", "Fold the washcloths", "Laundry Room"], "lv1": ["🫧", "Wash & dry Victor's laundry", "Laundry Room"], "lv2": ["👔", "Put away Victor's laundry", "Master Closet"], "lc1": ["🫧", "Wash & dry Chelsea's laundry", "Laundry Room"], "lc2": ["👚", "Put away Chelsea's laundry", "Master Closet"], "lx1": ["👔", "Help fold Mom's or Dad's laundry", "Laundry Room"], "cmwiq38d9c6hb3": ["💵", "Pay bills & check the budget", null], "cmwiq06qdjrco3": ["🛁", "Give Penny a bath", null], "cmwipyh1yd44ca": ["✨", "Reset the room", null], "cmwipx8uhal9lv": ["🧹", "Vacuum the floor", null], "c3": ["🪥", "Brush my teeth (morning)", null], "c4": ["🥣", "Clear my breakfast dishes", null], "c5": ["🎒", "Pack my backpack", null], "c6": ["💧", "Fill Penny's water bowl", null], "c7": ["📦", "Unpack my backpack & lunchbox", null], "c8": ["👟", "Put away my shoes & coat", null], "c9": ["📚", "Read (20 min)", null], "c10": ["📖", "Read with a grown-up (15 min)", null], "c11": ["🧸", "Put toys in the bins", null], "c12": ["🧹", "Tidy up (10 min)", null], "c13": ["🍽️", "Set the plates & forks", null], "c14": ["🥤", "Set the napkins & cups", null], "c16": ["🧺", "Put dirty clothes in the hamper", null], "c17": ["🌙", "Put on pajamas & brush teeth", null], "c18": ["👖", "Lay out tomorrow's clothes", null], "c19": ["🗑️", "Empty the small trash cans", null], "c20": ["🧦", "Dust the low shelves", null], "c21": ["🚰", "Wipe the sink", null], "c24": ["🧹", "Sweep the floor", null], "c25": ["🪑", "Wipe the chairs", null], "c26": ["🚛", "Bring the bins back in", null], "c29": ["✨", "Reset the room", null], "c30": ["🧹", "Vacuum the floor", null], "c31": ["🧹", "Vacuum crumbs under the table", null], "c33": ["⚽", "Pick up the toys", null], "c34": ["🎁", "Pick 3 toys to donate", null], "c35": ["🚗", "Clean out the car", null], "c36": ["💡", "Wipe light switches & door handles", null], "c37": ["🪟", "Wipe the glass door", null], "c38": ["🔦", "Clean under my bed", null], "c39": ["📚", "Organize my bookshelf", null], "c40": ["🖍️", "Sort the art supplies", null], "c41": ["🫙", "Count my money jars", null], "c42": ["🧤", "Hang up my snow gear", null], "c43": ["❄️", "Clear the front steps", null], "c44": ["🐦", "Fill the bird feeder", null], "c45": ["🌱", "Pick up sticks & trash (spring)", null], "c46": ["🌿", "Clear the yard before mowing", null], "c47": ["🌿", "Pull weeds (10 min)", null], "c48": ["🍃", "Help bag the grass clippings", null], "c49": ["🌷", "Water the flowers", null], "c50": ["🚲", "Wash the bikes & outside toys", null], "c51": ["🍂", "Rake leaves (15 min)", null], "c52": ["👖", "Try on clothes & sort outgrown", null], "c53": ["🐶", "Feed Penny breakfast", null], "c54": ["🐶", "Feed Penny dinner", null], "c55": ["🗑️", "Help take the trash & recycling out", null], "c56": ["💩", "Pick up dog waste", null], "c57": ["🛏️", "Help change the bed sheets", null], "c58": ["🛁", "Help give Penny a bath", null], "c59": ["🚿", "Help wash the car", null], "c60": ["🍳", "Cook dinner", null], "c62": ["🥪", "Pack school lunches", null], "c63": ["🦮", "Walk Penny", null], "c65": ["🛁", "Clean the bathrooms", null], "c66": ["🧽", "Vacuum & mop the main floor", null], "c67": ["🥶", "Clean out the fridge", null], "c68": ["🗓️", "Plan meals & order groceries", null], "c69": ["💊", "Give Penny her flea & heartworm meds", null], "c70": ["🌬️", "Check the furnace filter", null], "c71": ["🔥", "Test the smoke alarms", null], "c73": ["🌱", "Mow the lawn", null], "c74": ["🍂", "Take the yard-waste bin out", null], "c75": ["🏠", "Clean the gutters", null], "c76": ["🚿", "Winterize the hose & sprinklers", null], "c77": ["❄️", "Clear the snow (driveway & steps)", null], "c78": ["🛍️", "Help carry in groceries", null], "c79": ["🍽️", "Unload the dishwasher (extra)", null], "c80": ["🥄", "Put away the silverware", null], "c81": ["🧺", "Fold towels & washcloths", "Laundry Room"], "c82": ["🍳", "Help cook dinner", null], "c83": ["🐾", "Wash Penny's bowls", null], "c84": ["🦮", "Help walk Penny", null], "c85": ["🐾", "Wipe Penny's muddy paws", "Mud Room"], "c86": ["👟", "Line up the shoes", null], "c87": ["🪶", "Dust the room", null], "c88": ["📘", "Read an extra book", null], "c89": ["🤝", "Help my brother finish a chore", null], "c90": ["💌", "Make a thank-you card", null], "c91": ["📬", "Bring in the mail", null], "c92": ["❄️", "Help shovel snow", null], "c93": ["🍂", "Rake extra leaves", null]}; if (!ROOMS().includes('Laundry Room')){ const R = ROOMS(), i = R.indexOf('Mud Room'); R.splice(i<0?R.length:i+1, 0, 'Laundry Room'); ST().rooms = R; }
         cfg().chores.forEach(c => { const n = NM[c.id]; if (!n) return; c.emoji = n[0]; c.title = n[1]; if (n[2]) c.room = n[2]; }); S.config.chores = cfg().chores.filter(c => c.id !== 'c72');
         ST().libVersion = 9; setTimeout(() => saveConfig('Chore names tidied'), 2100); } }
-    else if (first){ D = derive(); await call('apiSaveConfig', S.config, choreEvents()); DV.lastChoreSync = TODAY(); saveDev(); }
+    else if (first){ D = derive(); await call('apiSaveConfig', S.config, []); S.base = clone(S.config); DV.lastChoreSync = TODAY(); saveDev(); }
     const ids = new Set((j.log||[]).map(e=>e.id));
     S.log = (j.log||[]).concat(S.outbox.filter(e=>!ids.has(e.id)));
     S.events = j.events || []; S.calUrl = j.calUrl || ''; S.calError = j.calError || '';
@@ -588,12 +588,44 @@ function log(ev){
   const e = Object.assign({id:uid(), ts:new Date().toISOString(), date:TODAY(), kid:'', type:'', ref:'', title:'', pts:'', stars:'', money:'', jar:'', status:'', note:'', by:''}, ev);
   S.log.push(e); S.outbox.push(e); store(); flush(); return e;
 }
+const clone = o => JSON.parse(JSON.stringify(o));
+/** Only what changed since the last copy from Google: changed/new items, deleted ids, changed settings, new order. */
+function diffConfig(a, b){
+  const out = {tables:{}, order:{}, settings:{}}; let n = 0;
+  for (const k of ['people','chores','sched','rewards']){
+    const A = {}, B = {}; (a[k]||[]).forEach(x => A[x.id] = x); (b[k]||[]).forEach(x => B[x.id] = x);
+    const upsert = (b[k]||[]).filter(x => !A[x.id] || JSON.stringify(A[x.id]) !== JSON.stringify(x)), del = (a[k]||[]).filter(x => !B[x.id]).map(x => x.id);
+    if (upsert.length || del.length){ out.tables[k] = {upsert: clone(upsert), del}; n += upsert.length + del.length; }
+    const oa = (a[k]||[]).map(x=>x.id).filter(id => B[id]).join('|'), ob = (b[k]||[]).map(x=>x.id).filter(id => A[id]).join('|');
+    if (k !== 'chores' && oa !== ob){ out.order[k] = (b[k]||[]).map(x=>x.id); out.tables[k] = out.tables[k] || {upsert:[], del:[]}; n++; }
+  }
+  for (const key of new Set(Object.keys(a.settings||{}).concat(Object.keys(b.settings||{}))))
+    if (JSON.stringify((a.settings||{})[key]) !== JSON.stringify((b.settings||{})[key])){ out.settings[key] = clone(b.settings[key]); n++; }
+  return n ? out : null;
+}
+function applyPatch(cfg, p){
+  for (const k of Object.keys(p.tables||{})){ const t = p.tables[k], del = new Set(t.del||[]); let rows = (cfg[k]||[]).filter(x => !del.has(x.id));
+    (t.upsert||[]).forEach(u => { const i = rows.findIndex(x => x.id === u.id); if (i >= 0) rows[i] = clone(u); else if (k==='chores') rows.unshift(clone(u)); else rows.push(clone(u)); });
+    if (p.order && p.order[k]){ const pos = {}; p.order[k].forEach((id,i) => pos[id] = i); rows.sort((a,b) => (pos[a.id] ?? 1e9) - (pos[b.id] ?? 1e9)); }
+    cfg[k] = rows; }
+  cfg.settings = Object.assign(cfg.settings||{}, clone(p.settings||{}));
+}
+let cfgFlushing = false;
 function saveConfig(msg){
+  D = derive();
+  if (!S.base) S.base = clone(S.config);
+  const p = diffConfig(S.base, S.config);
+  if (p){ S.cfgOut.push(p); applyPatch(S.base, p); }
   store();
   if (remote==='local'){ toast(msg||'Saved'); return; }
-  syncDot('busy'); D = derive();
-  call('apiSaveConfig', S.config, choreEvents()).then(r => { syncDot('ok'); toast(r && r.calError ? 'Saved. Calendar problem: '+r.calError : (msg||'Saved to Google')); DV.lastChoreSync = TODAY(); saveDev(); })
-    .catch(e => { syncDot('err'); toast("Saved here, but couldn't reach Google: "+(e.message||e)); });
+  flushCfg(msg);
+}
+async function flushCfg(msg){
+  if (cfgFlushing || remote==='local') return; if (!S.cfgOut.length){ if (msg) toast(msg); return; }
+  cfgFlushing = true; syncDot('busy');
+  try { while (S.cfgOut.length){ await call('apiPatchConfig', S.cfgOut[0]); S.cfgOut.shift(); store(); } syncDot(S.outbox.length?'busy':'ok'); if (msg) toast(msg); }
+  catch(e){ syncDot('err'); if (msg) toast("Saved here. It will go to Google when the connection is back."); }
+  cfgFlushing = false;
 }
 /** The next 4 weeks of non-daily chores, for the Family Hub calendar. */
 function choreEvents(){ return []; }   // chores stay in the app; only schedules go to Google Calendar
@@ -1201,7 +1233,7 @@ addEventListener('resize', () => { clearTimeout(A._r); A._r = setTimeout(() => {
 
 // ---------- start ----------
 (function boot(){
-  try { const j = JSON.parse(localStorage.getItem(LS)||'null'); if (j){ S.config = j.config; S.log = j.log||[]; S.outbox = j.outbox||[]; } } catch(e){}
+  try { const j = JSON.parse(localStorage.getItem(LS)||'null'); if (j){ S.config = j.config; S.base = j.base||null; S.cfgOut = j.cfgOut||[]; S.log = j.log||[]; S.outbox = j.outbox||[]; } } catch(e){}
   S.config = normalize(S.config);
   if (!ST().startDate){ ST().startDate = TODAY(); store(); }
   remote = (window.google && google.script && google.script.run) ? 'gas' : (location.protocol.startsWith('http') && apiKey() ? 'url' : 'local');
@@ -1213,7 +1245,7 @@ addEventListener('resize', () => { clearTimeout(A._r); A._r = setTimeout(() => {
   setInterval(() => { if (TODAY()!==lastDay){ lastDay = TODAY(); U.day = now().getDay(); U.off = 0; } if (U.view==='parent' && !isParent()) U.view = 'today'; if (!busy()) render(); }, 30000);
   setInterval(() => { if (!busy()) pull(); }, 45000);
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible'){ flush(); pull(); } });
-  setInterval(flush, 20000);
+  setInterval(() => { flush(); flushCfg(); }, 20000);
 })();
 </script>
 </body>
