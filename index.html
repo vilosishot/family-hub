@@ -1,0 +1,1029 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes">
+<title>Family Hub</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#2f9e95">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#faf7f3;--card:#fff;--ink:#2a2622;--muted:#8a827a;--line:#ece6de;--chip:#f3eee8;--accent:#c8664c;--good:#2f8f5b;--bad:#c2493d;--shadow:0 1px 2px rgba(0,0,0,.04),0 6px 18px rgba(60,40,20,.06);--serif:'Fraunces',Georgia,serif;--sans:'Nunito',system-ui,sans-serif}
+[data-theme=dark]{--bg:#15171b;--card:#20242a;--ink:#eef0f3;--muted:#98a1ab;--line:#2e343c;--chip:#2a2f37;--accent:#e58a6f;--good:#4cb67c;--shadow:0 1px 2px rgba(0,0,0,.3),0 6px 18px rgba(0,0,0,.25)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:var(--sans);transition:background .25s,color .25s}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+input,select,textarea{font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:12px;height:42px;padding:0 12px;font-weight:700;width:100%}
+textarea{height:70px;padding:10px 12px}
+.p{--soft:color-mix(in srgb,var(--c) 24%,var(--card));--tint:color-mix(in srgb,var(--c) 9%,var(--bg))}
+.app{display:grid;grid-template-columns:78px 1fr;height:100vh;height:100dvh}
+.side{background:var(--card);border-right:1px solid var(--line);display:flex;flex-direction:column;align-items:center;padding:14px 0;gap:4px;overflow:auto}
+.side .logo{font-family:var(--serif);font-size:22px;margin-bottom:12px;color:var(--accent)}
+.side button{width:64px;padding:8px 0;border-radius:14px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;font-weight:800;color:var(--muted);position:relative}
+.side button .i{font-size:22px;filter:grayscale(1);opacity:.6}
+.side button.on{background:var(--chip);color:var(--ink)} .side button.on .i{filter:none;opacity:1}
+.side .sp{flex:1}
+.side .badge{position:absolute;top:4px;right:8px;background:var(--accent);color:#fff;border-radius:9px;font-size:10px;min-width:18px;height:18px;display:grid;place-items:center;padding:0 4px}
+.main{display:flex;flex-direction:column;min-width:0;min-height:0}
+.head{display:flex;align-items:center;gap:12px;padding:14px 22px 10px;flex-wrap:wrap}
+.head h1{font-family:var(--serif);font-weight:600;font-size:26px;margin:0}
+.head .time{font-weight:800;color:var(--muted);font-size:17px}
+.head .r{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.sync{width:10px;height:10px;border-radius:50%;background:var(--muted)} .sync.ok{background:var(--good)} .sync.busy{background:#d9a432} .sync.err{background:var(--bad)}
+.pill{height:38px;padding:0 14px;border-radius:19px;background:var(--card);border:1px solid var(--line);font-weight:800;font-size:14px;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.pill.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.pill.p.on{background:var(--c);border-color:var(--c);color:#fff}
+.btn{height:42px;padding:0 18px;border-radius:21px;background:var(--ink);color:var(--bg);font-weight:800;display:inline-flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap}
+.btn.light{background:var(--chip);color:var(--ink)} .btn.bad{background:var(--bad);color:#fff} .btn.good{background:var(--good);color:#fff} .btn.sm{height:34px;padding:0 12px;font-size:13px}
+.body{flex:1;overflow:auto;padding:4px 22px 60px}
+.hint{color:var(--muted);font-weight:700;font-size:14px}
+.banner{background:color-mix(in srgb,#f3c34a 20%,var(--card));border-radius:14px;padding:10px 14px;font-weight:700;font-size:14px;margin-bottom:14px}
+.av{width:46px;height:46px;border-radius:50%;background:var(--c);color:#fff;display:grid;place-items:center;font-weight:800;font-size:19px;flex:none}
+.av.s{width:26px;height:26px;font-size:12px}
+.title{font-family:var(--serif);font-weight:600;margin:0;font-size:26px}
+.bar{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+/* today */
+.cols{display:grid;gap:14px;grid-template-columns:repeat(var(--n),minmax(240px,1fr));align-items:start}
+.col{border-radius:22px;background:var(--tint);padding:14px 12px 16px;min-width:0}
+.ph{display:flex;align-items:center;gap:10px;padding:0 4px}
+.ph .nm{font-family:var(--serif);font-size:24px;font-weight:500;line-height:1}
+.ph .row{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
+.ph .av{position:relative}
+.ph .av .pal{position:absolute;right:-4px;bottom:-4px;width:20px;height:20px;border-radius:50%;background:var(--card);font-size:11px;display:grid;place-items:center;box-shadow:var(--shadow)}
+.prog{height:24px;min-width:70px;border-radius:12px;background:var(--card);position:relative;overflow:hidden;font-size:12px;font-weight:800;display:grid;place-items:center;padding:0 10px}
+.prog i{position:absolute;inset:0 auto 0 0;background:var(--soft)} .prog span{position:relative}
+.stars{height:24px;border-radius:12px;background:var(--card);font-size:12px;font-weight:800;display:flex;align-items:center;gap:4px;padding:0 9px}
+.rings{display:flex;justify-content:space-between;margin:14px 2px 6px}
+.ring{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;font-weight:800;color:var(--muted);width:25%}
+.ring .c{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;font-size:22px;background:conic-gradient(var(--c) calc(var(--pc)*1%), var(--card) 0);position:relative}
+.ring .c:after{content:'';position:absolute;inset:4px;border-radius:50%;background:var(--tint)}
+.ring .c span{position:relative;z-index:1}
+.ring.on{color:var(--ink)} .ring.on .c{box-shadow:0 0 0 2px var(--c)}
+.gate{margin:8px 2px 4px;border-radius:14px;background:var(--card);padding:9px 12px;font-weight:800;font-size:14px;color:var(--muted)}
+.gate.open{color:var(--good);background:color-mix(in srgb,var(--good) 15%,var(--card))}
+.wkbar{margin:8px 4px 0;font-size:12px;font-weight:800;color:var(--muted)}
+.wkbar .b{height:8px;border-radius:4px;background:var(--card);overflow:hidden;margin-top:4px}
+.wkbar .b i{display:block;height:100%;background:var(--c)}
+.sec{font-family:var(--serif);font-size:18px;margin:14px 4px 8px;display:flex;align-items:center}
+.sec small{margin-left:auto;font-family:var(--sans);font-size:12px;color:var(--muted);font-weight:800}
+.card{width:100%;border-radius:18px;background:var(--card);margin-bottom:8px;overflow:hidden;display:block}
+.card .pic{height:70px;display:grid;place-items:center;font-size:40px;background:var(--soft);width:100%}
+.card .bot{display:flex;align-items:center;gap:8px;padding:9px 12px}
+.card .t{flex:1;font-weight:800;font-size:15px;line-height:1.2;text-align:left}
+.card.done{opacity:.6} .card.done .pic{background:var(--c)}
+.rowt{width:100%;display:flex;align-items:center;gap:10px;border-radius:16px;background:var(--card);padding:8px 10px 8px 12px;margin-bottom:7px}
+.rowt .e{font-size:22px;width:28px;text-align:center}
+.rowt .t{flex:1;font-weight:800;font-size:15px;line-height:1.2;text-align:left;min-height:34px;display:flex;flex-direction:column;justify-content:center}
+.rowt .t small{display:block;color:var(--muted);font-size:12px}
+.rowt.done .t{color:var(--muted);text-decoration:line-through}
+.st{display:inline-flex;align-items:center;gap:3px;background:var(--chip);border-radius:10px;padding:2px 7px;font-size:12px;font-weight:800}
+.ck{width:40px;height:40px;border-radius:50%;border:2px solid var(--line);background:var(--card);flex:none;display:grid;place-items:center;color:transparent;font-size:18px;font-weight:900}
+.done .ck{background:var(--c);border-color:var(--c);color:#fff}
+.empty{border:2px dashed color-mix(in srgb,var(--c) 35%,var(--line));border-radius:16px;padding:16px;text-align:center;color:var(--muted);font-weight:700;font-size:14px;margin-top:12px}
+.empty button{color:var(--ink);text-decoration:underline;font-weight:800}
+.box{margin-top:20px;background:var(--card);border-radius:22px;padding:14px 16px;box-shadow:var(--shadow)}
+.box h2{font-family:var(--serif);font-weight:500;font-size:22px;margin:0}
+.pg{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;margin-top:12px}
+.pc{border-radius:16px;background:var(--bg);padding:12px;display:flex;flex-direction:column;gap:8px;border:2px solid transparent;text-align:left}
+.pc .top{display:flex;gap:10px;align-items:center}
+.pc .e{font-size:28px} .pc .t{font-weight:800;font-size:15px;line-height:1.2} .pc .t small{display:block;color:var(--muted);font-size:12px}
+.pc .acts{display:flex;gap:6px;flex-wrap:wrap}
+.pc.taken{border-color:var(--c);background:var(--tint)} .pc.fin{opacity:.6} .pc.dim{opacity:.45}
+.who{font-size:13px;font-weight:800;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+/* library */
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.lib{background:var(--card);border-radius:20px;box-shadow:var(--shadow);overflow:hidden}
+.li{display:flex;align-items:center;gap:12px;padding:10px 14px;border-top:1px solid var(--line)}
+.li .e{font-size:26px;width:34px;text-align:center}
+.li .t{flex:1;min-width:0;font-weight:800;font-size:15px;text-align:left}
+.li .t small{display:block;color:var(--muted);font-size:12px;font-weight:700;margin-top:2px}
+.tag{display:inline-block;font-size:11px;font-weight:800;border-radius:8px;padding:1px 7px;margin-right:4px;background:var(--chip);color:var(--muted)}
+.tag.tr{background:color-mix(in srgb,#2f9e95 18%,var(--card));color:#2a8a82}
+.tag.te{background:color-mix(in srgb,#e0735a 18%,var(--card));color:#c45b43}
+.tag.ta{background:color-mix(in srgb,#5b84c4 18%,var(--card));color:#4f74b0}
+.as{display:flex;gap:5px;flex-wrap:nowrap;justify-content:flex-end}
+.ab{height:32px;padding:0 10px;border-radius:16px;font-size:12px;font-weight:800;border:1.5px solid var(--line);color:var(--muted);display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.ab.on{background:var(--c);border-color:var(--c);color:#fff}
+.ab.abpool.on{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.grp{font-family:var(--serif);font-size:19px;padding:14px 14px 6px;background:var(--bg)}
+/* modal */
+.scrim{position:fixed;inset:0;background:rgba(10,12,16,.5);display:grid;place-items:center;z-index:50;padding:18px}
+.modal{background:var(--card);border-radius:24px;padding:22px;width:100%;max-width:580px;max-height:92vh;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.modal h2{font-family:var(--serif);font-weight:500;margin:0 0 14px;font-size:24px}
+.modal .big{font-size:64px;text-align:center;line-height:1.1}
+.fl{display:flex;flex-direction:column;gap:5px;font-weight:800;font-size:13px;margin-bottom:12px;color:var(--muted)}
+.inl{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-weight:800;color:var(--ink);font-size:14px}
+.inl input,.inl select{width:auto;min-width:70px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.g3{display:grid;grid-template-columns:90px 1fr;gap:10px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chipb{height:36px;min-width:36px;padding:0 12px;border-radius:18px;border:1.5px solid var(--line);font-weight:800;font-size:13px;color:var(--muted)}
+.chipb.on{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.chipb.p.on{background:var(--c);border-color:var(--c);color:#fff}
+.mact{display:flex;gap:8px;margin-top:10px;align-items:center;flex-wrap:wrap}
+.mact .sp{flex:1}
+.part{border-top:1px solid var(--line);padding-top:12px;margin-top:4px}
+.sw{display:grid;grid-template-columns:repeat(auto-fill,minmax(50px,1fr));gap:10px}
+.swb{aspect-ratio:1;border-radius:50%;background:var(--c);position:relative;display:grid;place-items:center;color:#fff;font-weight:800;font-size:15px;border:3px solid transparent}
+.swb.mine{border-color:var(--ink);box-shadow:0 0 0 3px var(--card) inset}
+.swb.taken{opacity:.28;cursor:not-allowed}
+.swb.taken:after{content:'';position:absolute;left:12%;right:12%;top:50%;height:3px;background:#fff;transform:rotate(-45deg);border-radius:2px}
+.pin{display:grid;grid-template-columns:repeat(3,72px);gap:12px;justify-content:center;margin-top:14px}
+.pin button{height:72px;border-radius:50%;background:var(--chip);font-family:var(--serif);font-size:28px}
+.dots{display:flex;gap:12px;justify-content:center} .dots i{width:14px;height:14px;border-radius:50%;background:var(--line)} .dots i.f{background:var(--ink)}
+/* family */
+.fam{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.fc{background:var(--card);border-radius:22px;padding:16px;box-shadow:var(--shadow);border-top:8px solid var(--c)}
+.fc .top{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.fc .top .nm{font-family:var(--serif);font-size:22px;flex:1}
+.arr{width:36px;height:36px;border-radius:50%;background:var(--chip);font-weight:900}
+.arr:disabled{opacity:.3}
+/* schedule */
+.tl{display:grid;grid-template-columns:44px repeat(var(--n),minmax(0,1fr));gap:10px}
+.tcol{position:relative;background:var(--card);border-radius:18px;box-shadow:var(--shadow)}
+.tcol .hh{height:48px;display:flex;align-items:center;gap:8px;padding:0 10px;font-family:var(--serif);font-size:18px}
+.tcol .hh button{margin-left:auto;font-family:var(--sans)}
+.blk{position:absolute;left:6px;right:6px;border-radius:10px;padding:4px 8px;background:color-mix(in srgb,var(--bc) 22%,var(--card));border-left:4px solid var(--bc);font-size:12px;font-weight:800;overflow:hidden;line-height:1.2;text-align:left;display:flex;flex-direction:column;justify-content:flex-start;align-items:flex-start}
+.blk small{color:var(--muted);font-weight:700;display:block}
+.blk.gc{border-left-style:dashed}
+.hr{position:absolute;left:0;right:0;border-top:1px dashed var(--line);font-size:11px;font-weight:800;color:var(--muted)}
+.now{position:absolute;left:0;right:0;height:2px;background:var(--accent);z-index:2}
+/* calendar + rewards */
+.wk{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:10px}
+.day{background:var(--card);border-radius:18px;padding:10px;min-height:380px;box-shadow:var(--shadow)}
+.day h3{font-family:var(--serif);font-weight:500;font-size:18px;margin:0 0 8px;display:flex;align-items:baseline;gap:6px}
+.day h3 b{font-family:var(--sans);font-size:12px;color:var(--muted)}
+.day.today h3 b{background:var(--accent);color:#fff;border-radius:10px;padding:1px 7px}
+.ev{border-radius:12px;padding:7px 9px;margin-bottom:6px;background:color-mix(in srgb,var(--c) 20%,var(--card));font-weight:800;font-size:12.5px;line-height:1.2;display:block;width:100%;text-align:left}
+.ev small{display:block;color:var(--muted);font-weight:700;font-size:11px}
+.ev.chore{background:var(--card);border:1.5px dashed var(--c)} .ev.chore.dn{opacity:.5;text-decoration:line-through}
+.rw{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px}
+.rc{background:var(--card);border-radius:20px;padding:14px;text-align:left;display:flex;flex-direction:column;gap:10px;box-shadow:var(--shadow)}
+.rc .e{font-size:42px;text-align:center} .rc .t{font-family:var(--serif);font-size:19px;line-height:1.15;flex:1}
+.rbar{height:32px;border-radius:16px;background:var(--chip);position:relative;overflow:hidden;display:grid;place-items:center;font-weight:800;font-size:13px}
+.rbar i{position:absolute;inset:0 auto 0 0;background:var(--soft)} .rbar span{position:relative}
+.rbar.go{background:var(--c);color:#fff} .rbar.go i{display:none}
+.jars{display:flex;gap:10px;margin:8px 0 16px;flex-wrap:wrap}
+.jar{background:var(--card);border-radius:18px;padding:10px 16px;min-width:110px;box-shadow:var(--shadow)}
+.jar b{font-family:var(--serif);font-size:22px;font-weight:500;display:block}
+.jar span{font-size:12px;font-weight:800;color:var(--muted)}
+.list .it{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line)} .list .it:first-child{border-top:0}
+.list .it .t{flex:1;font-weight:800} .list .it .t small{display:block;color:var(--muted);font-weight:700}
+.twocol{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:var(--bg);border-radius:24px;padding:12px 20px;font-weight:800;z-index:60;max-width:90vw;text-align:center}
+#cf{position:fixed;inset:0;pointer-events:none;z-index:70}
+/* ---------- phone ---------- */
+@media (max-width:760px){
+  .app{grid-template-columns:1fr;grid-template-rows:1fr auto}
+  .side{order:2;flex-direction:row;justify-content:space-around;padding:4px 2px calc(4px + env(safe-area-inset-bottom));border-right:0;border-top:1px solid var(--line);overflow:visible}
+  .side .logo,.side .sp,.side [data-a=theme]{display:none}
+  .side button{width:auto;flex:1;padding:6px 0;font-size:10px}
+  .main{order:1}
+  .head{padding:10px 14px 6px;gap:8px} .head h1{font-size:20px} .head .time{font-size:14px}
+  .head .r{margin-left:0;width:100%;flex-wrap:nowrap;overflow-x:auto;padding-bottom:2px}
+  .body{padding:4px 12px 40px}
+  .cols{grid-template-columns:1fr} .pg{grid-template-columns:1fr}
+  .wk{grid-template-columns:1fr} .day{min-height:0}
+  .twocol,.g2{grid-template-columns:1fr}
+  .li{flex-wrap:wrap} .li .as{width:100%;justify-content:flex-start;overflow-x:auto;order:3}
+  .modal{padding:18px;border-radius:20px} .scrim{padding:8px;align-items:end}
+  .tl{grid-template-columns:36px 1fr}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <nav class="side" id="side"></nav>
+  <div class="main">
+    <div class="head"><h1 id="hd"></h1><span class="time" id="tm"></span><span class="sync" id="sync"></span><div class="r" id="hr"></div></div>
+    <div class="body" id="view"></div>
+  </div>
+</div>
+<div id="modal"></div><div id="toast"></div><canvas id="cf"></canvas>
+<script>
+/* =========================================================================================
+   FAMILY HUB — chores, schedules, rewards and allowance for the whole family.
+   Data lives in the Family Hub Google Sheet; schedules and chores go to the Family Hub Google Calendar.
+   ========================================================================================= */
+const PALETTE = {coral:'#e0735a',orange:'#e8913a',sun:'#d4a72c',lime:'#7fa83a',green:'#3e9e6b',teal:'#2f9e95',sky:'#3a9bd0',blue:'#4f78c4',navy:'#3b4f8f',purple:'#8b6cc6',pink:'#d2649b',red:'#cc4b4b',brown:'#9a6b4b',slate:'#66788a'};
+const DOW = ['Su','Mo','Tu','We','Th','Fr','Sa'], DOWL = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const SLOTS = {morning:['🌤️','Morning'],afternoon:['☀️','Afternoon'],evening:['🌙','Evening'],anytime:['🧹','Anytime']};
+const REPEAT = {once:"Doesn't repeat",daily:'Daily',weekly:'Weekly',monthly:'Monthly',after:"After it's done",asneeded:'As needed',extra:'Extra job (bonus stars)'};
+const WEEKN = {1:'1st',2:'2nd',3:'3rd',4:'4th',5:'Last'};
+
+// ---------- starting chore list (research-based). rec: r = suggested for ReiRei 4–5, e = Ender 7–8, a = grown-ups ----------
+let N = 0;
+const K = (emoji, title, rec, freq, slot, o={}) => {
+  const c = Object.assign({id:'c'+(++N), emoji, title, rec, freq, every:1, slot, days:[], week:1, monthDay:'', date:'', start:'', until:'', afterDays:7, months:[], time:'', points: rec==='a'?0:(freq==='daily'?1:freq==='extra'?4:2), how:'', assign:[], pool:false, active:true}, o);
+  if (c.freq==='seasonal') c.freq = c.days.length ? 'weekly' : 'daily';
+  return c;
+};
+const SNOW=[11,12,1,2,3], MOW=[5,6,7,8,9];
+const LIBRARY = [
+  K('👕','Get dressed','re','daily','morning'), K('🛏️','Make my bed','re','daily','morning',{how:"Blanket up, pillow on top. Doesn't need to be perfect."}),
+  K('🪥','Brush teeth (morning)','re','daily','morning'), K('🥣','Breakfast dishes to the sink','re','daily','morning'),
+  K('🎒','Backpack ready by the door','e','daily','morning',{days:[1,2,3,4,5]}), K('💧',"Fill Penny's water bowl",'re','daily','morning',{assign:['reiden']}),
+  K('📦','Unpack backpack & lunchbox','e','daily','afternoon',{days:[1,2,3,4,5]}), K('👟','Shoes & coat put away','re','daily','afternoon'),
+  K('📚','Read for 20 minutes','e','daily','afternoon',{points:2}), K('📖','Book time with a grown-up (15 min)','r','daily','afternoon',{points:2}),
+  K('🧸','Toys back in the bins','r','daily','afternoon'), K('🧹','10-minute room tidy','e','daily','afternoon',{how:'Toys in bins, books on the shelf, clothes in the hamper.'}),
+  K('🍽️','Set the table: plates & forks','e','daily','evening'), K('🥤','Napkins & cups on the table','r','daily','evening'),
+  K('🧽','Clear my plate','re','daily','evening'), K('🧺','Dirty clothes in the hamper','re','daily','evening'),
+  K('🌙','Pajamas & brush teeth','re','daily','evening'), K('👖',"Lay out tomorrow's clothes",'e','daily','evening',{days:[0,1,2,3,4]}),
+  K('🗑️','Empty the small trash cans','e','weekly','afternoon',{days:[4],how:'Into the big bin before trash goes out Thursday night.'}),
+  K('🧦','Dust low shelves with a sock','r','weekly','afternoon',{days:[1],how:'Put a sock on your hand and wipe!'}), K('🚰','Wipe the bathroom sink','e','weekly','afternoon',{days:[2],how:'One wipe: faucet, then sink, then counter.'}),
+  K('🪴','Water the plants','re','weekly','afternoon',{days:[3]}),
+  K('🧹','Sweep the kitchen floor','e','weekly','afternoon',{days:[4]}), K('🪑','Wipe the kitchen chairs','r','weekly','afternoon',{days:[4]}),
+  K('🚛','Bring the bins back in','e','weekly','afternoon',{days:[5]}), 
+  K('✨','Room reset','re','weekly','anytime',{days:[6],how:'Floor clear, bed made, desk clear, toys in bins.'}),
+  K('🧹','Vacuum my room','e','weekly','anytime',{days:[0],points:3}), K('🧹','Hand-vacuum crumbs under the table','r','weekly','anytime',{days:[0]}),
+  K('🐕','Brush Penny','re','weekly','anytime',{days:[0]}), K('⚽','Pick up toys in the yard','r','seasonal','anytime',{days:[6],months:[3,4,5,6,7,8,9,10]}),
+  K('🎁','Pick 3 toys to donate','re','monthly','anytime',{days:[6],week:1,points:3}), K('🚗','Clean out the car','re','monthly','anytime',{days:[6],week:2,points:3}),
+  K('💡','Wipe light switches & door handles','e','monthly','anytime',{days:[6],week:2,points:3}), K('🪟','Wipe the glass door','r','monthly','anytime',{days:[6],week:2,points:3}),
+  K('🔦','Clean under my bed','re','monthly','anytime',{days:[6],week:3,points:3}), K('📚','Organize my bookshelf','e','monthly','anytime',{days:[6],week:4,points:3}),
+  K('🖍️','Sort the art supplies','r','monthly','anytime',{days:[6],week:4,points:3}), K('🫙','Count my money jars','re','monthly','anytime',{days:[0],week:5,how:'Count Spend, Save and Give with Mom or Dad.'}),
+  K('🧤','Snow gear on the rack','re','seasonal','afternoon',{months:SNOW,points:1,how:'Boots on the mat, gloves and hat on the rack to dry.'}), K('❄️','Sweep or shovel the front steps','e','seasonal','anytime',{days:[6],months:[12,1,2],points:3}),
+  K('🐦','Fill the bird feeder','r','seasonal','anytime',{days:[0],months:[12,1,2]}), K('🌱','Spring yard pickup: sticks & trash','re','seasonal','anytime',{days:[6],months:[3,4],points:3}),
+  K('🌿','Yard sweep before mowing','re','seasonal','afternoon',{days:[5],months:MOW,how:'Toys and sticks off the grass so the lawn can be mowed.'}), K('🌿','Pull weeds (10 minutes)','e','seasonal','anytime',{days:[6],months:MOW,points:3}),
+  K('🍃','Help bag grass clippings','e','seasonal','anytime',{days:[6],months:MOW,points:3}), K('🌷','Water the flowers','r','seasonal','afternoon',{days:[2,5],months:[6,7,8]}),
+  K('🚲','Wash bikes & outside toys','re','seasonal','anytime',{days:[0],months:[5,6,7,8],points:3}), K('🍂','Rake leaves (15 minutes)','re','seasonal','anytime',{days:[6],months:[10,11],points:3}),
+  K('👖','Closet check: try on, make an outgrown pile','re','monthly','anytime',{days:[0],week:1,months:[4,10],points:3}),
+  K('🐶','Feed Penny breakfast','ea','daily','morning',{assign:['ender'],how:'One scoop in the bowl. Check the water too.'}),
+  K('🐶','Feed Penny dinner (1 scoop)','rea','daily','evening',{assign:['reiden']}),
+  K('🗑️','Trash & recycling to the curb (with Dad)','ea','weekly','evening',{days:[4],how:'Pickup is Friday morning.',assign:['ender']}),
+  K('💩','Dog-waste pickup in the yard','ea','weekly','anytime',{days:[6],how:'Gloves and scooper. Bag goes in the trash. Wash hands!',points:3,assign:['ender']}),
+  K('🛏️','Help change bed sheets','rea','monthly','anytime',{days:[6],week:1,points:3,assign:['reiden','ender']}), K('🛁','Give Penny a bath (with a grown-up)','ea','monthly','anytime',{days:[6],week:3,points:4,assign:['ender']}),
+  K('🚿','Wash the car with Dad','ea','seasonal','anytime',{days:[0],months:MOW,points:4,assign:['ender']}),
+  K('🍳','Cook dinner','a','daily','evening'), K('🧼','Kitchen reset & run the dishwasher','a','daily','evening'),
+  K('🥪','Pack school lunches','a','daily','evening',{days:[0,1,2,3,4]}), K('🦮','Walk Penny','a','daily','anytime'),
+  K('🛁','Clean bathrooms','a','weekly','anytime',{days:[3]}),
+  K('🧽','Vacuum & mop the main floor','a','weekly','anytime',{days:[6]}), K('🥶','Clean out the fridge','a','weekly','evening',{days:[4],how:'Night before trash pickup.'}),
+  K('🗓️','Meal plan & grocery order','a','weekly','anytime',{days:[0]}), K('💊','Penny flea & heartworm meds','a','monthly','morning',{days:[0],week:1}),
+  K('🌬️','Check the furnace filter','a','monthly','anytime',{days:[6],week:1}), K('🔥','Test smoke alarms','a','monthly','anytime',{days:[6],week:1}),
+  K('💵','Pay bills & check the budget','a','monthly','evening',{days:[0],week:4}), K('🌱','Mow the lawn','a','seasonal','anytime',{days:[6],months:MOW}),
+  K('🍂','Yard-waste bin to the curb','a','seasonal','evening',{days:[5],months:[4,5,6,7,8,9,10,11],how:'Pickup is Saturday.'}),
+  K('🏠','Clean the gutters','a','monthly','anytime',{days:[6],week:2,months:[4,10]}), K('🚿','Winterize hose & sprinklers','a','monthly','anytime',{days:[6],week:3,months:[10]}),
+  K('❄️','Clear snow: driveway & steps','a','asneeded','morning',{months:SNOW}),
+  K('🛍️','Help carry in groceries','re','extra','anytime'), K('🍽️','Empty the dishwasher','e','extra','anytime',{points:4}),
+  K('🥄','Put away the silverware','r','extra','anytime',{points:2}), K('🧺','Fold towels & washcloths','re','extra','anytime'),
+  K('🍳','Help cook dinner','re','extra','anytime',{points:4}), K('🐾',"Wash Penny's bowls",'re','extra','anytime',{points:2}),
+  K('🦮','Walk Penny with a grown-up','re','extra','anytime'), K('🐾',"Wipe Penny's muddy paws",'re','extra','anytime',{points:1,months:SNOW}),
+  K('👟','Line up the shoes by the door','r','extra','anytime',{points:2}), K('🪶','Dust the living room','re','extra','anytime'),
+  K('📘','Read an extra book','re','extra','anytime'), K('🤝','Help my brother finish a chore','re','extra','anytime',{points:2}),
+  K('💌','Make a thank-you card','re','extra','anytime'), K('📬','Bring in the mail','re','extra','anytime',{points:1}),
+  K('❄️','Shovel snow with a grown-up','re','extra','anytime',{points:5,months:SNOW}), K('🍂','Extra leaf raking','re','extra','anytime',{points:4,months:[9,10,11]}),
+];
+// ---- laundry: Sunday = Ender's, Tuesday = ReiRei's + towels, Thursday = grown-ups' ----
+const L = (id, emoji, title, kid, day, slot, points, o={}) => Object.assign({id, emoji, title, rec: kid==='pool'||kid==='victor'||kid==='chelsea' ? 'a' : (kid==='ender'?'e':'r'), freq:'weekly', every:1, slot, days:[day], week:1, monthDay:'', date:'', start:'', until:'', afterDays:7, months:[], time:'', points, how:'', assign: kid==='pool'?[]:[kid], pool: kid==='pool', active:true, cat:'laundry'}, o);
+const LAUNDRY = [
+  L('l1','🧺','Bring my hamper to the laundry room','ender',0,'morning',0,{how:"Sunday is Ender's laundry day."}),
+  L('l2','🎨','Sort my clothes: lights & darks','ender',0,'morning',0,{how:'Two piles. Ask a grown-up if you are not sure.'}),
+  L('l3','🫧',"Wash & dry Ender's laundry",'victor',0,'morning',0,{how:'Start it in the morning so it can be folded on Monday.'}),
+  L('l4','👕','Fold & put away my clothes','ender',1,'afternoon',0,{how:'Shirts folded in the drawer, pants together, socks matched.'}),
+  L('l5','🧺','Bring my hamper to the laundry room','reiden',2,'morning',0,{how:"Tuesday is ReiRei's laundry day."}),
+  L('l6','🫧',"Wash & dry ReiRei's laundry + towels",'chelsea',2,'morning',0),
+  L('l7','🧦','Match my socks & fill my drawers','reiden',3,'afternoon',0),
+  L('l8','🧽','Fold the washcloths & hand towels','reiden',3,'afternoon',1),
+  L('l9','🛁','Fold the bath towels & put them away','ender',3,'afternoon',2),
+  L('l10','🫧',"Wash & dry the grown-ups' laundry",'pool',4,'morning',0,{how:"Thursday is Victor & Chelsea's laundry day."}),
+  L('l11','👔',"Fold & put away the grown-ups' laundry",'pool',5,'anytime',0),
+  Object.assign(L('l12','👔',"Help fold the grown-ups' laundry",'pool',5,'anytime',4),{freq:'extra', rec:'re', days:[], pool:true, cat:'laundry'}),
+];
+// difficulty → points (chores) / stars (extra jobs). Easy 1, Medium 2, Hard 3, Big job 5 · extras 2 / 4 / 6 / 10
+const PTS = {'Read for 20 minutes':2,'Book time with a grown-up (15 min)':2,'10-minute room tidy':2,'Fold & put away my laundry':3,'Vacuum my room':3,
+  'Sweep the kitchen floor':2,'Bring the bins back in':1,'Pick 3 toys to donate':2,'Clean out the car':3,'Clean under my bed':2,'Organize my bookshelf':2,'Sort the art supplies':2,
+  'Snow gear on the rack':1,'Sweep or shovel the front steps':3,'Spring yard pickup: sticks & trash':3,'Pull weeds (10 minutes)':3,'Help bag grass clippings':3,'Rake leaves (15 minutes)':3,
+  'Wash bikes & outside toys':3,'Closet check: try on, make an outgrown pile':2,'Trash & recycling to the curb (with Dad)':2,'Dog-waste pickup in the yard':3,'Help change bed sheets':3,
+  'Give Penny a bath (with a grown-up)':5,'Wash the car with Dad':5,
+  'Help carry in groceries':4,'Empty the dishwasher':6,'Put away the silverware':2,'Fold towels & washcloths':4,'Help cook dinner':6,"Wash Penny's bowls":2,'Walk Penny with a grown-up':4,
+  "Wipe Penny's muddy paws":2,'Line up the shoes by the door':2,'Dust the living room':4,'Read an extra book':4,'Help my brother finish a chore':2,'Make a thank-you card':4,'Bring in the mail':2,
+  'Shovel snow with a grown-up':10,'Extra leaf raking':6};
+LIBRARY.forEach(c => { if (c.title in PTS) c.points = PTS[c.title]; });
+// "Taking care of me" jobs are just what we do: no pay, but they still count for the play lock and the finish-the-day bonus
+const SELF_CARE = ['Get dressed','Make my bed','Brush teeth (morning)','Breakfast dishes to the sink','Backpack ready by the door','Unpack backpack & lunchbox','Shoes & coat put away',
+  'Read for 20 minutes','Book time with a grown-up (15 min)','Toys back in the bins','10-minute room tidy','Clear my plate','Dirty clothes in the hamper','Pajamas & brush teeth',"Lay out tomorrow's clothes",'Snow gear on the rack'];
+LIBRARY.forEach(c => { if (SELF_CARE.includes(c.title)) c.points = 0; });
+const LEVELS = {chore:[[0,'No pay · just what we do'],[1,'Easy'],[2,'Medium'],[3,'Hard'],[5,'Big job']], extra:[[2,'Easy'],[4,'Medium'],[6,'Hard'],[10,'Big job']]};
+const levelName = c => { const L = LEVELS[c.freq==='extra'?'extra':'chore'], n = Number(c.points)||0; const hit = L.find(x=>x[0]===n); return hit ? hit[1] : n+' pts'; };
+// first pass of assignments (edit any time): kid suggestions go to that kid, grown-up jobs go to the family pool
+LIBRARY.forEach(c => { c.cat = c.cat || '';
+  if (c.freq==='extra'){ c.pool = true; return; }
+  if (!c.assign.length){
+    if (c.rec.includes('r')) c.assign.push('reiden');
+    if (c.rec.includes('e')) c.assign.push('ender');
+  }
+  if (!c.assign.length) c.pool = true;
+});
+let sN = 0; const B = (who, start, end, title, emoji, days=[1,2,3,4,5]) => ({id:'s'+(++sN), who, start, end, title, emoji, days, color:''});
+const WE=[0,6], ALL=[0,1,2,3,4,5,6], FAM=['reiden','ender','chelsea','victor'];
+const DEFAULTS = {
+  people: [
+    {id:'reiden',name:'ReiRei',full:'Reiden',kid:true,color:'teal',bday:'2022-02-27',allowance:'',goal:'',goalCost:''},
+    {id:'ender',name:'Ender',full:'Ender',kid:true,color:'coral',bday:'2019-01-22',allowance:'',goal:'',goalCost:''},
+    {id:'chelsea',name:'Chelsea',full:'Chelsea',kid:false,color:'purple',bday:'',allowance:'',goal:'',goalCost:''},
+    {id:'victor',name:'Victor',full:'Victor',kid:false,color:'blue',bday:'',allowance:'',goal:'',goalCost:''},
+  ],
+  chores: LAUNDRY.concat(LIBRARY),
+  sched: [
+    B(['reiden','ender'],'06:45','07:30','Morning list','☀️'), B(FAM,'07:30','07:50','Breakfast','🥣'),
+    B(['ender'],'08:05','15:15','School','🏫'), B(['reiden'],'08:05','15:15','Preschool / home','🧩'),
+    B(['reiden','ender'],'15:15','15:45','Snack & after-school list','🍎'), B(['ender'],'15:45','16:05','Reading','📚'), B(['reiden'],'15:45','16:05','Book time','📖'),
+    B(['reiden','ender'],'16:05','17:15','Outside play','🌳'), B(['reiden','ender'],'17:15','17:45','Games (if unlocked)','🎮'),
+    B(FAM,'18:00','18:40','Family dinner','🍝',ALL), B(['reiden','ender'],'19:00','19:30','Bath & teeth','🛁',ALL),
+    B(['reiden'],'19:45','20:00','Lights out','💤',ALL), B(['ender'],'19:45','20:30','Read in bed, lights out','🔦',ALL),
+    B(FAM,'09:00','10:00','Weekend chores','🧹',WE), B(['reiden','ender'],'10:00','12:00','Outside & adventures','🌳',WE),
+    B(FAM,'18:45','19:00','Family meeting & payday','💰',[0]),
+  ],
+  rewards: [
+    {id:'r1',emoji:'🎮',title:'15 extra minutes of games',cost:10,cash:'',active:true},{id:'r2',emoji:'🍨',title:"Pick tonight's dessert",cost:15,cash:'',active:true},
+    {id:'r3',emoji:'💵',title:'Trade 10 ⭐ for $1 (Spend jar)',cost:10,cash:1,active:true},{id:'r4',emoji:'🌙',title:'Stay up 15 minutes later',cost:20,cash:'',active:true},
+    {id:'r5',emoji:'🎬',title:'Pick the family movie',cost:25,cash:'',active:true},{id:'r6',emoji:'🍕',title:"Pick what's for dinner",cost:30,cash:'',active:true},
+    {id:'r7',emoji:'🍦',title:'Park, ice cream or library trip',cost:50,cash:'',active:true},{id:'r8',emoji:'💛',title:'Date with Mom or Dad',cost:60,cash:'',active:true},
+    {id:'r9',emoji:'🏕️',title:'Friend playdate or sleepover',cost:80,cash:'',active:true},{id:'r10',emoji:'🧸',title:'Small toy or book (up to $5)',cost:50,cash:'',active:true},
+    {id:'r11',emoji:'🎉',title:'YES DAY!',cost:200,cash:'',active:true},
+  ],
+  settings: {pin:'8057', cards:'big', allowancePerYear:1, tiers:[{min:90,pay:100},{min:75,pay:75},{min:50,pay:50},{min:0,pay:25}], jars:{spend:50,save:40,give:10}, matchPct:10, fullDayBonus:2, streakDays:7, streakBonus:10, gateSlots:['morning','afternoon'], calendarNames:'', shareEmails:'', startDate:'', sound:true, starsPerDollar:10, demeritCap:15, libVersion:5},
+};
+
+// ---------- state ----------
+const LS = 'familyhub.v3', DEV = 'familyhub.device';
+let S = {config:null, log:[], outbox:[], events:[], calUrl:'', calError:''};
+let DV = Object.assign({theme:'light', me:'', lastChoreSync:''}, JSON.parse(localStorage.getItem(DEV)||'{}'));
+const U = {view:'today', who:'all', ring:{}, lib:'all', libStatus:'all', day:new Date().getDay(), ptab:'chores', parentUntil:0};
+let D = null, remote = 'local';
+const $ = s => document.querySelector(s);
+const esc = s => String(s??'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const cfg = () => S.config, ST = () => S.config.settings;
+const P = id => cfg().people.find(p => p.id===id);
+const col = p => PALETTE[p && p.color] || '#8a827a';
+const pvx = (p, cls='') => `class="p ${cls}" style="--c:${col(p)}"`;
+const ini = p => (p && p.name || '?')[0].toUpperCase();
+const pad = n => String(n).padStart(2,'0');
+const ymd = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const pd = s => { const [y,m,d] = String(s).slice(0,10).split('-').map(Number); return new Date(y, m-1, d); };
+const addDays = (d,n) => { const x = new Date(d.getFullYear(), d.getMonth(), d.getDate()); x.setDate(x.getDate()+n); return x; };
+const weekStart = d => addDays(d, -((d.getDay()+6)%7));
+const money = n => '$' + (Math.round((Number(n)||0)*100)/100).toFixed(2);
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+const num = v => (v===''||v==null||isNaN(v)) ? null : Number(v);
+const arr = v => Array.isArray(v) ? v : (v===''||v==null ? [] : String(v).split(',').map(x=>x.trim()).filter(Boolean).map(x=>isNaN(x)?x:Number(x)));
+const now = () => new Date(), TODAY = () => ymd(now());
+const narrow = () => matchMedia('(max-width:760px)').matches;
+function ageOn(b, d){ if (!b) return null; const x = pd(b); let a = d.getFullYear()-x.getFullYear(); if (d.getMonth()<x.getMonth() || (d.getMonth()===x.getMonth() && d.getDate()<x.getDate())) a--; return a; }
+function toast(m){ $('#toast').innerHTML = `<div class="toast">${esc(m)}</div>`; clearTimeout(toast.t); toast.t = setTimeout(()=>$('#toast').innerHTML='',2600); }
+function modal(h){ $('#modal').innerHTML = h ? `<div class="scrim" data-a="close" data-self="1"><div class="modal">${h}</div></div>` : ''; }
+function confetti(c){ if (matchMedia('(prefers-reduced-motion: reduce)').matches) return; const cv=$('#cf'),x=cv.getContext('2d');cv.width=innerWidth;cv.height=innerHeight;const cs=[c,'#ffd23f','#7cc6a4','#f3a683','#fff'];const Q=Array.from({length:130},()=>({x:innerWidth/2,y:innerHeight*.5,vx:(Math.random()-.5)*15,vy:-Math.random()*15-4,s:Math.random()*8+4,r:0,c:cs[Math.random()*5|0]}));let f=0;(function s(){x.clearRect(0,0,cv.width,cv.height);for(const p of Q){p.vy+=.45;p.x+=p.vx;p.y+=p.vy;p.r+=.2;x.save();x.translate(p.x,p.y);x.rotate(p.r);x.fillStyle=p.c;x.fillRect(-p.s/2,-p.s/3,p.s,p.s*.6);x.restore();}if(++f<100)requestAnimationFrame(s);else x.clearRect(0,0,cv.width,cv.height);})(); }
+let actx; function blip(up=true){ if (!ST().sound) return; try { actx = actx || new (window.AudioContext||window.webkitAudioContext)(); const o=actx.createOscillator(), g=actx.createGain(), t=actx.currentTime; o.frequency.setValueAtTime(up?660:440,t); o.frequency.exponentialRampToValueAtTime(up?990:330,t+.12); g.gain.setValueAtTime(.1,t); g.gain.exponentialRampToValueAtTime(.001,t+.25); o.connect(g).connect(actx.destination); o.start(t); o.stop(t+.26);} catch(e){} }
+function say(t){ try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(t); u.rate=.9; speechSynthesis.speak(u); } catch(e){} }
+function saveDev(){ localStorage.setItem(DEV, JSON.stringify(DV)); }
+
+// ---------- when does a chore happen ----------
+const monthsBetween = (a,b) => (b.getFullYear()-a.getFullYear())*12 + b.getMonth()-a.getMonth();
+function occurs(c, d){
+  if (c.active===false || c.active==='FALSE') return false;
+  const ds = ymd(d), m = d.getMonth()+1, dow = d.getDay(), every = Math.max(1, num(c.every)||1), days = arr(c.days), months = arr(c.months);
+  if (c.start && ds < c.start) return false;
+  if (c.until && ds > c.until) return false;
+  if (months.length && !months.includes(m)) return false;
+  const anchor = c.start ? pd(c.start) : pd('2026-01-04');
+  switch (c.freq){
+    case 'once': return ds === c.date;
+    case 'daily': if (days.length && !days.includes(dow)) return false; return every===1 || Math.round((d-anchor)/864e5) % every === 0;
+    case 'weekly': if (!days.includes(dow)) return false; return every===1 || Math.round((weekStart(d)-weekStart(anchor))/(7*864e5)) % every === 0;
+    case 'monthly': {
+      if (every>1 && monthsBetween(anchor,d) % every) return false;
+      if (num(c.monthDay)) return d.getDate() === num(c.monthDay);
+      if (days.length && !days.includes(dow)) return false;
+      const w = num(c.week)||1; if (w>=5) return addDays(d,7).getMonth() !== d.getMonth();
+      return Math.ceil(d.getDate()/7) === w;
+    }
+    case 'after': { const last = D && D.lastDone[c.id]; const due = last ? addDays(pd(last), num(c.afterDays)||7) : (c.start ? pd(c.start) : pd(TODAY())); return ds === ymd(due > pd(TODAY()) ? due : pd(TODAY())) || (last === ds); }
+  }
+  return false;
+}
+function repeatText(c){
+  const days = arr(c.days), every = num(c.every)||1, list = days.length===7||!days.length ? '' : (days.length===5 && [1,2,3,4,5].every(x=>days.includes(x))) ? 'school days' : days.map(x=>DOWL[x].slice(0,3)).join(', ');
+  let t = {once:`Once, ${c.date||'no date'}`, daily: every>1?`Every ${every} days`:'Every day', weekly: every>1?`Every ${every} weeks`:'Weekly', monthly: every>1?`Every ${every} months`:'Monthly', after:`${num(c.afterDays)||7} days after it's done`, asneeded:'As needed', extra:'Extra job'}[c.freq] || c.freq;
+  if (c.freq==='daily' && list) t += ` · ${list}`;
+  if (c.freq==='weekly') t += ` · ${list||'pick a day'}`;
+  if (c.freq==='monthly') t += num(c.monthDay) ? ` · day ${c.monthDay}` : ` · ${WEEKN[c.week]||'1st'} ${days.length?DOWL[days[0]]:'week'}`;
+  const months = arr(c.months); if (months.length) t += ` · ${months.map(x=>MON[x-1]).join(', ')}`;
+  if (!['extra','asneeded'].includes(c.freq)) t += ` · ${c.time?fmtT(c.time):SLOTS[c.slot]?.[1]||''}`;
+  return t;
+}
+const fmtT = s => { if (!s) return ''; const [h,m] = s.split(':').map(Number); return `${(h%12)||12}:${pad(m)}${h<12?'am':'pm'}`; };
+const status = c => arr(c.assign).length ? 'assigned' : (c.pool===true||c.pool==='TRUE') ? 'pool' : 'off';
+const isPool = c => status(c)==='pool';
+
+// ---------- history → current state ----------
+const key = (d,p,c) => `${d}|${p}|${c}`;
+function derive(){
+  const st = {}; for (const e of S.log) if (e.type==='approve'||e.type==='reject') st[e.ref] = e.type;
+  const evs = [...S.log].sort((a,b) => String(a.ts).localeCompare(String(b.ts)));
+  const d = {done:new Set(), pool:{}, stars:{}, jars:{}, pending:[], extraCount:{}, paid:{}, bonus:{}, lastDone:{}, status:st, history:[]};
+  const ensure = k => { if (!(k in d.stars)){ d.stars[k]=0; d.jars[k]={spend:0,save:0,give:0}; } };
+  cfg().people.forEach(p => ensure(p.id));
+  for (const e of evs){
+    const k = e.kid; if (k) ensure(k); const s = Number(e.stars)||0;
+    switch (e.type){
+      case 'done': d.done.add(key(e.date,k,e.ref)); if (!d.lastDone[e.ref] || e.date > d.lastDone[e.ref]) d.lastDone[e.ref] = e.date; break;
+      case 'undo': d.done.delete(key(e.date,k,e.ref)); break;
+      case 'take': d.pool[e.date+'|'+e.ref] = {taker:k}; break;
+      case 'release': delete d.pool[e.date+'|'+e.ref]; break;
+      case 'pooldone': { const cur = d.pool[e.date+'|'+e.ref] || {}; d.pool[e.date+'|'+e.ref] = {taker:cur.taker||k, doneBy:k, ev:e.id}; if (s) d.stars[k] += s; if (!d.lastDone[e.ref] || e.date > d.lastDone[e.ref]) d.lastDone[e.ref] = e.date; break; }
+      case 'poolundo': { const cur = d.pool[e.date+'|'+e.ref]; if (cur && cur.doneBy){ if (s) d.stars[cur.doneBy] = Math.max(0, d.stars[cur.doneBy]-s); d.pool[e.date+'|'+e.ref] = {taker:cur.taker}; } break; }
+      case 'extra': { const r = st[e.id]; if (r!=='reject'){ const kk = key(e.date,k,e.ref); d.extraCount[kk] = (d.extraCount[kk]||0)+1; } if (r==='approve') d.stars[k] += s; else if (!r) d.pending.push(e); break; }
+      case 'redeem': { const r = st[e.id]; if (r!=='reject') d.stars[k] = Math.max(0, d.stars[k]-Math.abs(s)); if (!r) d.pending.push(e); break; }
+      case 'bonus': d.stars[k] = Math.max(0, d.stars[k]+s); d.bonus[k+'|'+e.ref] = (d.bonus[k+'|'+e.ref]||0)+s; break;
+      case 'demerit': d.stars[k] = Math.max(0, d.stars[k]-Math.abs(s)); break;
+      case 'jar': if (e.jar in d.jars[k]) d.jars[k][e.jar] = Math.round((d.jars[k][e.jar]+(Number(e.money)||0))*100)/100; break;
+      case 'payday': d.paid[k+'|'+e.ref] = e; break;
+    }
+    if (['extra','redeem','bonus','demerit','payday','jar','pooldone'].includes(e.type)) d.history.push(e);
+  }
+  return d;
+}
+function listFor(p, d){ // chores a person has on a day
+  const ds = ymd(d);
+  const mine = cfg().chores.filter(c => arr(c.assign).includes(p.id) && !['extra','asneeded'].includes(c.freq) && occurs(c,d));
+  const taken = cfg().chores.filter(c => { const k = D.pool[ds+'|'+c.id]; return k && k.taker===p.id; });
+  return mine.map(c => ({c, d:D.done.has(key(ds,p.id,c.id))})).concat(taken.map(c => ({c, d:!!D.pool[ds+'|'+c.id].doneBy, pool:true})))
+    .map(x => (x.g = x.pool ? 'chores' : (x.c.freq==='daily' ? (x.c.slot==='anytime'?'afternoon':x.c.slot) : 'chores'), x));
+}
+function weekStats(p, ws){
+  let possible=0, earned=0, due=0; const t = TODAY(), sd = ST().startDate;
+  for (let i=0;i<7;i++){ const day = addDays(ws,i), ds = ymd(day); if (sd && ds < sd) continue;
+    for (const c of cfg().chores){ if (!arr(c.assign).includes(p.id) || ['extra','asneeded','after'].includes(c.freq) || !occurs(c,day)) continue;
+      const pts = Number(c.points)||0; possible += pts; if (ds < t) due += pts; if (D.done.has(key(ds,p.id,c.id))) earned += pts; } }
+  return {possible, earned, due, pct: possible ? Math.round(earned/possible*100) : 0};
+}
+const baseAllowance = (p, d) => { const a = num(p.allowance); return a!=null ? a : (ageOn(p.bday,d)||0) * (Number(ST().allowancePerYear)||0); };
+const tierFor = pct => { const t = [...ST().tiers].sort((a,b)=>b.min-a.min).find(t => pct>=t.min); return t ? t.pay : 0; };
+function payFor(p, ws){ const w = weekStats(p, ws), base = baseAllowance(p, addDays(ws,6)), tier = w.possible ? tierFor(w.pct) : 0; return {...w, base, tier, pay: Math.round(base*tier/100*4)/4}; }
+
+// ---------- saving & Google ----------
+function syncDot(s){ const el = $('#sync'); el.className = 'sync '+(s||''); el.title = {ok:'Saved to Google',busy:'Saving…',err:"Can't reach Google — will retry",'':'Saved on this device only'}[s||'']; }
+function store(){ try { localStorage.setItem(LS, JSON.stringify({config:S.config, log:S.log, outbox:S.outbox})); } catch(e){} }
+function normalize(c){
+  const d = JSON.parse(JSON.stringify(DEFAULTS)); c = c || d;
+  for (const k of ['people','chores','sched','rewards']) if (!Array.isArray(c[k]) || !c[k].length) c[k] = d[k];
+  c.settings = Object.assign({}, d.settings, c.settings||{});
+  for (const k of ['tiers','jars','gateSlots']) if (typeof c.settings[k]==='string') try { c.settings[k] = JSON.parse(c.settings[k]); } catch(e){ c.settings[k] = d.settings[k]; }
+  c.chores.forEach(x => { x.days = arr(x.days); x.months = arr(x.months); x.assign = arr(x.assign).map(String); x.pool = x.pool===true||x.pool==='TRUE'; x.active = !(x.active===false||x.active==='FALSE'); x.every = num(x.every)||1; });
+  c.sched.forEach(b => { b.days = arr(b.days); b.who = arr(b.who).map(String); });
+  c.people.forEach(p => { p.kid = p.kid===true||p.kid==='TRUE'; p.bday = String(p.bday||'').slice(0,10); });
+  c.rewards.forEach(r => { r.active = !(r.active===false||r.active==='FALSE'); });
+  return c;
+}
+function migrate2(){
+  const byId = {}; DEFAULTS.chores.forEach(c => byId[c.id] = c);
+  cfg().chores.forEach(c => { const d = byId[c.id]; if (d && d.title===c.title) c.points = d.points; });
+  cfg().rewards.forEach(r => { const d = DEFAULTS.rewards.find(x=>x.id===r.id); if (d && (r.id==='r3'||r.id==='r10')) Object.assign(r, d); });
+  Object.assign(ST(), {starsPerDollar: ST().starsPerDollar||10, demeritCap: ST().demeritCap||15, libVersion:3});
+  setTimeout(() => saveConfig('Updated chore pay'), 500);
+}
+const API_URL = 'https://script.google.com/macros/s/AKfycbyoX9RyIVAe9s1XqT2HSGd_3TQNCSMhimvJiXeCruDh_SXKNd1rlByP81FuXellq3ki/exec';
+function apiKey(){ const q = new URLSearchParams(location.search).get('key'); if (q){ localStorage.setItem('familyhub.key', q); history.replaceState(null,'',location.pathname); } return localStorage.getItem('familyhub.key') || ''; }
+function call(fn, ...args){
+  if (remote === 'gas') return new Promise((res, rej) => google.script.run.withSuccessHandler(res).withFailureHandler(rej)[fn](...args));
+  if (remote === 'url') return fetch(API_URL, {method:'POST', body: JSON.stringify({key: apiKey(), fn, args})}).then(r => r.json()).then(j => { if (j && j.error) throw new Error(j.error); return j.result; });
+  return Promise.reject(new Error('local'));
+}
+let flushing = false;
+async function flush(){
+  if (remote==='local' || flushing) return; if (!S.outbox.length){ syncDot('ok'); return; }
+  flushing = true; syncDot('busy'); const batch = S.outbox.slice(0,60);
+  try { await call('apiAppend', batch); const ids = new Set(batch.map(e=>e.id)); S.outbox = S.outbox.filter(e=>!ids.has(e.id)); store(); syncDot(S.outbox.length?'busy':'ok'); }
+  catch(e){ syncDot('err'); }
+  flushing = false; if (S.outbox.length && !$('#sync').classList.contains('err')) setTimeout(flush, 400);
+}
+async function pull(first){
+  if (remote==='local') return;
+  try {
+    syncDot('busy');
+    const j = await call('apiGetAll');
+    if (j.config){ S.config = normalize(j.config); if ((Number(ST().libVersion)||1) < 3) migrate2(); if ((Number(ST().libVersion)||1) < 4){ if (String(ST().pin)==='1234') ST().pin = '8057'; ST().libVersion = 4; setTimeout(() => saveConfig('PIN updated'), 800); }
+      if ((Number(ST().libVersion)||1) < 5){ const drop = ['Match socks from the laundry','Fold & put away my laundry','Put clean clothes in my drawers','Laundry: wash, dry, fold'];
+        S.config.chores = cfg().chores.filter(c => !drop.includes(c.title)); const have = new Set(cfg().chores.map(c=>c.id));
+        S.config.chores = JSON.parse(JSON.stringify(LAUNDRY.filter(c=>!have.has(c.id)))).concat(cfg().chores); normalize(S.config); ST().libVersion = 5; setTimeout(() => saveConfig('Laundry days added'), 1200); } }
+    else if (first){ D = derive(); await call('apiSaveConfig', S.config, choreEvents()); DV.lastChoreSync = TODAY(); saveDev(); }
+    const ids = new Set((j.log||[]).map(e=>e.id));
+    S.log = (j.log||[]).concat(S.outbox.filter(e=>!ids.has(e.id)));
+    S.events = j.events || []; S.calUrl = j.calUrl || ''; S.calError = j.calError || '';
+    store(); syncDot(S.outbox.length?'busy':'ok');
+    if (!busy()) render();
+    flush();
+    if (DV.lastChoreSync !== TODAY()){ D = derive(); call('apiSyncChores', choreEvents()).then(()=>{ DV.lastChoreSync = TODAY(); saveDev(); }).catch(()=>{}); }
+  } catch(e){ syncDot('err'); }
+}
+function log(ev){
+  const e = Object.assign({id:uid(), ts:new Date().toISOString(), date:TODAY(), kid:'', type:'', ref:'', title:'', pts:'', stars:'', money:'', jar:'', status:'', note:'', by:''}, ev);
+  S.log.push(e); S.outbox.push(e); store(); flush(); return e;
+}
+function saveConfig(msg){
+  store();
+  if (remote==='local'){ toast(msg||'Saved'); return; }
+  syncDot('busy'); D = derive();
+  call('apiSaveConfig', S.config, choreEvents()).then(r => { syncDot('ok'); toast(r && r.calError ? 'Saved. Calendar problem: '+r.calError : (msg||'Saved to Google')); DV.lastChoreSync = TODAY(); saveDev(); })
+    .catch(e => { syncDot('err'); toast("Saved here, but couldn't reach Google: "+(e.message||e)); });
+}
+/** The next 4 weeks of non-daily chores, for the Family Hub calendar. */
+function choreEvents(){
+  const out = [], t = pd(TODAY());
+  for (let i=0;i<28;i++){ const d = addDays(t,i), ds = ymd(d);
+    for (const c of cfg().chores){
+      if (status(c)==='off' || ['daily','extra','asneeded'].includes(c.freq) || !occurs(c,d)) continue;
+      const who = arr(c.assign).map(id=>P(id)?.name).filter(Boolean).join(' & ') || 'Family pool';
+      out.push({key:`${c.id}:${ds}`, date:ds, time:c.time||'', title:`${c.emoji} ${c.title} · ${who}`, note:c.how||''});
+    } }
+  return out;
+}
+const busy = () => !!$('#modal').innerHTML || document.activeElement?.matches('input,select,textarea');
+
+// ---------- grown-up PIN ----------
+const isParent = () => Date.now() < U.parentUntil;
+let pinBuf = '', pinThen = null;
+function needParent(fn){ if (isParent()) return fn(); pinBuf=''; pinThen=fn; drawPin(); }
+function drawPin(msg){ modal(`<div class="big">🔐</div><h2 style="text-align:center">Grown-ups only</h2><p class="hint" style="text-align:center">${esc(msg||'Enter the parent PIN')}</p><div class="dots">${[0,1,2,3].map(i=>`<i class="${i<pinBuf.length?'f':''}"></i>`).join('')}</div><div class="pin">${[1,2,3,4,5,6,7,8,9,'✕',0,'⌫'].map(n=>`<button data-a="pin" data-n="${n}">${n}</button>`).join('')}</div>`); }
+
+// ---------- rendering ----------
+function render(){
+  D = derive();
+  document.documentElement.dataset.theme = DV.theme;
+  const n = now();
+  $('#hd').textContent = n.toLocaleDateString([], {weekday: narrow()?'short':'long', month:'short', day:'numeric'});
+  $('#tm').textContent = n.toLocaleTimeString([], {hour:'numeric', minute:'2-digit'});
+  const nav = [['today','✅','Today'],['schedule','⏰','Schedules'],['calendar','📅','Calendar'],['rewards','⭐','Rewards'],['family','🏠','Family'],['parent','🔒','Grown-ups']];
+  $('#side').innerHTML = `<div class="logo">fh</div>` + nav.map(([v,i,l])=>`<button class="${U.view===v?'on':''}" data-a="nav" data-v="${v}"><span class="i">${v==='parent'&&isParent()?'🔓':i}</span>${l}${v==='parent'&&D.pending.length?`<span class="badge">${D.pending.length}</span>`:''}</button>`).join('') +
+    `<div class="sp"></div><button data-a="theme"><span class="i" style="filter:none;opacity:1">${DV.theme==='dark'?'☀️':'🌙'}</span>${DV.theme==='dark'?'Light':'Dark'}</button>`;
+  if (narrow() && U.who==='all' && ['today','schedule'].includes(U.view)) U.who = DV.me || cfg().people[0].id;
+  const filt = ['today','schedule','calendar'].includes(U.view);
+  $('#hr').innerHTML = filt ? (narrow()&&U.view!=='calendar'?[]:[`<button class="pill ${U.who==='all'?'on':''}" data-a="who" data-id="all">Everyone</button>`]).concat(cfg().people.map(p=>`<button ${pvx(p,'pill'+(U.who===p.id?' on':''))} data-a="who" data-id="${p.id}"><span class="av s">${ini(p)}</span>${esc(p.name)}</button>`)).join('') : '';
+  if (U.view==='parent' && !isParent()) U.view = 'today';
+  $('#view').innerHTML = {today:vToday, chores:vChores, schedule:vSched, calendar:vCal, rewards:vRewards, family:vFamily, parent:vParent}[U.view]();
+}
+const shown = () => cfg().people.filter(p => U.who==='all' || U.who===p.id);
+const GROUPS = [['morning','🌤️','Morning'],['afternoon','☀️','Afternoon'],['evening','🌙','Evening'],['chores','🧹','Chores']];
+
+function vToday(){
+  const ps = shown(), t = now(), ds = TODAY();
+  const cols = ps.map(p => {
+    const list = listFor(p, t), nd = list.filter(x=>x.d).length, sel = U.ring[p.id];
+    const rings = GROUPS.map(([g,i,l]) => { const l2 = list.filter(x=>x.g===g), pc = l2.length ? l2.filter(x=>x.d).length/l2.length*100 : 0;
+      return `<button class="ring ${sel===g?'on':''}" data-a="ring" data-p="${p.id}" data-g="${g}"><span class="c" style="--pc:${pc}"><span>${i}</span></span>${l}</button>`; }).join('');
+    const gl = list.filter(x => arr(ST().gateSlots).includes(x.g) && !x.d).length;
+    const gate = p.kid && list.length ? `<div class="gate ${gl?'':'open'}">${gl?`🔒 Friends & games: ${gl} more to go`:'🔓 Friends & games unlocked!'}</div>` : '';
+    const w = p.kid ? weekStats(p, weekStart(t)) : null;
+    const wk = w && w.possible ? `<div class="wkbar">This week: ${w.earned}/${w.possible} points (${w.pct}%) · allowance ${money(baseAllowance(p,t))}<div class="b"><i style="width:${w.pct}%"></i></div></div>` : '';
+    const secs = GROUPS.filter(([g]) => !sel || sel===g).map(([g,,l]) => {
+      const items = list.filter(x=>x.g===g); if (!items.length) return '';
+      const big = p.kid && ST().cards==='big' && g!=='chores';
+      return `<div class="sec">${l}<small>${items.filter(x=>x.d).length}/${items.length}</small></div>` + items.map(({c,d,pool}) => {
+        const chk = pool ? `data-a="pooldone" data-c="${c.id}" data-p="${p.id}"` : `data-a="tick" data-c="${c.id}" data-p="${p.id}"`;
+        const det = `data-a="details" data-c="${c.id}" data-p="${p.id}"`;
+        const pay = p.kid && Number(c.points) && !pool ? `<span class="st" title="Counts toward allowance">💰 ${c.points}</span>` : '';
+        return big ? `<div class="card ${d?'done':''}"><button class="pic" ${det}>${c.emoji}</button><div class="bot"><button class="t" ${det}>${esc(c.title)}</button>${pay}<button class="ck" ${chk} aria-label="Done">✓</button></div></div>`
+                   : `<div class="rowt ${d?'done':''}"><span class="e">${c.emoji}</span><button class="t" ${det}>${esc(c.title)}${pool?'<small>Took it today</small>':c.freq!=='daily'?`<small>${esc(repeatText(c).split(' · ')[0])}</small>`:''}</button>${pay}<button class="ck" ${chk} aria-label="Done">✓</button></div>`;
+      }).join('');
+    }).join('');
+    const empty = !list.length ? `<div class="empty">${p.kid?`Nothing on ${esc(p.name)}'s list today.`:`Nothing on your list. Take something from <b>Family chores</b> below.`}</div>` : '';
+    return `<section ${pvx(p,'col')}><div class="ph"><button class="av" data-a="color" data-p="${p.id}" title="Change color">${ini(p)}<span class="pal">🎨</span></button><div><div class="nm">${esc(p.name)}</div><div class="row"><span class="prog"><i style="width:${list.length?nd/list.length*100:0}%"></i><span>${nd}/${list.length}</span></span>${p.kid?`<span class="stars">⭐ ${D.stars[p.id]||0}</span>`:''}</div></div></div>
+      ${wk}${list.length?`<div class="rings">${rings}</div>`:''}${gate}${secs}${empty}</section>`;
+  }).join('');
+  const poolToday = cfg().chores.filter(c => isPool(c) && c.freq!=='extra' && (occurs(c,t) || (c.freq==='asneeded' && (!arr(c.months).length || arr(c.months).includes(t.getMonth()+1)))));
+  const pcard = c => { const k = D.pool[ds+'|'+c.id] || {}, tk = k.taker && P(k.taker), db = k.doneBy && P(k.doneBy);
+    return `<div ${tk?pvx(tk,'pc taken'+(db?' fin':'')):'class="pc"'}><button class="top" data-a="details" data-c="${c.id}"><span class="e">${c.emoji}</span><span class="t">${esc(c.title)}<small>${c.freq==='asneeded'?'As needed':(c.time?fmtT(c.time):SLOTS[c.slot][1])}${c.how?' · '+esc(c.how):''}</small></span></button>
+      ${db?`<div class="who">✓ Done by <span ${pvx(db,'av s')}>${ini(db)}</span>${esc(db.name)}<button class="btn light sm" style="margin-left:auto" data-a="poolundo" data-c="${c.id}">Undo</button></div>`
+        : tk?`<div class="who"><span ${pvx(tk,'av s')}>${ini(tk)}</span>${esc(tk.name)} is on it<span style="margin-left:auto;display:flex;gap:6px"><button class="btn light sm" data-a="release" data-c="${c.id}">Let go</button><button class="btn sm" data-a="pooldone" data-c="${c.id}" data-p="${tk.id}">Done ✓</button></span></div>`
+        : `<div class="acts"><button class="btn light sm" data-a="pick" data-c="${c.id}" data-m="take">✋ I'll take it</button><button class="btn sm" data-a="pick" data-c="${c.id}" data-m="done">✓ Done by…</button></div>`}</div>`; };
+  const extras = cfg().chores.filter(c => c.freq==='extra' && status(c)!=='off' && c.active && (!arr(c.months).length || arr(c.months).includes(t.getMonth()+1)));
+  const kids = cfg().people.filter(p=>p.kid);
+  const xcard = c => `<div class="pc"><div class="top"><span class="e">${c.emoji}</span><span class="t">${esc(c.title)}<small>☆ ${c.points} stars</small></span></div><div class="acts">${kids.map(k=>{const n=D.extraCount[key(ds,k.id,c.id)]||0;return `<button ${pvx(k,'btn sm'+(n?' light':''))} style="${n?'':'background:var(--c);color:#fff'}" data-a="extra" data-c="${c.id}" data-p="${k.id}">${n?'✓ ':''}${esc(k.name)}</button>`;}).join('')}</div></div>`;
+  const lt = cfg().chores.filter(c => c.cat==='laundry' && c.freq!=='extra' && status(c)!=='off' && occurs(c,t));
+  const lstate = c => isPool(c) ? !!(D.pool[ds+'|'+c.id]||{}).doneBy : arr(c.assign).every(id => D.done.has(key(ds,id,c.id)));
+  const laundry = lt.length ? `<div class="box" style="margin:0 0 16px;border:2px solid var(--accent)"><h2>🧺 Laundry today <span class="hint">${lt.filter(lstate).length}/${lt.length} done</span></h2>
+    <div class="chips" style="margin-top:10px">${lt.map(c => { const who = arr(c.assign).map(P).filter(Boolean), q = who[0] || (D.pool[ds+'|'+c.id]?.taker && P(D.pool[ds+'|'+c.id].taker));
+      return `<button ${q?pvx(q,'pill'+(lstate(c)?' on':'')):`class="pill ${lstate(c)?'on':''}"`} data-a="details" data-c="${c.id}" data-p="${q?q.id:''}">${lstate(c)?'✓ ':''}${c.emoji} ${esc(c.title)} · ${q?esc(q.name):'anyone'}</button>`; }).join('')}</div></div>` : '';
+  return `${laundry}<div class="cols" style="--n:${ps.length}">${cols}</div>
+    <div class="box"><h2>Family chores today</h2><span class="hint">Shared jobs. Whoever takes it puts their name on it, or marks who did it.</span>
+      <div class="pg">${poolToday.length?poolToday.map(pcard).join(''):'<span class="hint">Nothing in the family pool today.</span>'}</div></div>
+    ${kids.length?`<div class="box"><h2>Extra jobs for bonus stars</h2><span class="hint">Tap your name when it's done. A grown-up checks it.</span><div class="pg">${extras.map(xcard).join('')}</div></div>`:''}`;
+}
+
+function vChores(){
+  const tabs = [['all','Everything'],['laundry','🧺 Laundry'],['r','Suggested for ReiRei (4–5)'],['e','Suggested for Ender (7–8)'],['a','Grown-ups & house'],['extra','Extra jobs']];
+  const sts = [['all','Any status'],['assigned','Assigned'],['pool','Family pool'],['off','Not used']];
+  let list = cfg().chores.filter(c => U.lib==='all' || (U.lib==='laundry' ? c.cat==='laundry' : U.lib==='extra' ? c.freq==='extra' : c.freq!=='extra' && String(c.rec).includes(U.lib)));
+  if (U.libStatus!=='all') list = list.filter(c => status(c)===U.libStatus);
+  const order = ['daily','weekly','monthly','after','once','asneeded','extra'], gn = {daily:'Every day',weekly:'Weekly',monthly:'Monthly',after:"After it's done",once:'One time',asneeded:'As needed',extra:'Extra jobs (bonus stars)'};
+  const rows = order.map(f => { const l = list.filter(c=>c.freq===f); if (!l.length) return '';
+    return `<div class="grp">${gn[f]} <span class="hint">(${l.length})</span></div>` + l.map(c => `<div class="li" style="${c.active?'':'opacity:.5'}"><span class="e">${c.emoji}</span>
+      <button class="t" data-a="edit" data-c="${c.id}">${esc(c.title)}<small>${String(c.rec).includes('r')?'<span class="tag tr">ReiRei 4–5</span>':''}${String(c.rec).includes('e')?'<span class="tag te">Ender 7–8</span>':''}${String(c.rec).includes('a')?'<span class="tag ta">Grown-ups</span>':''}${esc(repeatText(c))}${c.freq==='asneeded'||String(c.rec)==='a'?'':Number(c.points)?` · ${levelName(c)} (${c.freq==='extra'?'☆ '+c.points+' stars':c.points+' pts'})`:' · 💛 No pay · just what we do'}</small></button>
+      <span class="as">${cfg().people.map(p=>`<button ${pvx(p,'ab'+(arr(c.assign).includes(p.id)?' on':''))} data-a="assign" data-c="${c.id}" data-p="${p.id}">${esc(p.name)}</button>`).join('')}<button class="ab abpool ${isPool(c)?'on':''}" data-a="assign" data-c="${c.id}" data-p="pool">🙋 Pool</button></span></div>`).join(''); }).join('');
+  return `<div class="bar"><span class="hint">${cfg().chores.length} chores. Tap a chore to edit it. Tap a name to give it to someone; tap again to take it away.</span><button class="btn" style="margin-left:auto" data-a="edit" data-c="new">+ New chore</button></div>
+    <div class="tabs">${tabs.map(([k,l])=>`<button class="pill ${U.lib===k?'on':''}" data-a="lib" data-k="${k}">${l}</button>`).join('')}</div>
+    <div class="tabs">${sts.map(([k,l])=>`<button class="pill ${U.libStatus===k?'on':''}" data-a="libs" data-k="${k}">${l}</button>`).join('')}</div>
+    <div class="lib">${rows || '<div class="li"><span class="hint">No chores match.</span></div>'}</div>`;
+}
+const chipRow = (name, opts, sel) => `<div class="chips" data-group="${name}">${opts.map(([v,l,p,bg])=>`<button type="button" ${p?pvx(p,'chipb'+(sel.includes(v)?' on':'')):`class="chipb ${sel.includes(v)?'on':''}"`} ${bg?`style="background:${bg};border-color:${bg};color:#fff;${sel.includes(v)?'box-shadow:0 0 0 3px var(--ink)':''}"`:''} data-a="chip" data-v="${v}">${l}</button>`).join('')}</div>`;
+const chipVals = g => [...document.querySelectorAll(`[data-group="${g}"] .chipb.on`)].map(b=>b.dataset.v);
+const SINGLE = ['freq','slot','week','bcolor','mmode'];
+
+/* Skylight-style chore details: tap a chore to see it, mark it done, read it aloud, edit or delete. */
+function details(cid, pid){
+  const c = cfg().chores.find(x=>x.id===cid); if (!c) return;
+  const p = pid && P(pid), ds = TODAY(), pk = D.pool[ds+'|'+c.id];
+  const done = p ? (isPool(c) ? !!(pk && pk.doneBy) : D.done.has(key(ds,p.id,c.id))) : false;
+  const who = arr(c.assign).map(id=>P(id)).filter(Boolean);
+  const weekly = c.freq==='weekly';
+  modal(`<div class="big">${c.emoji}</div><h2 style="text-align:center;margin-top:6px">${esc(c.title)}</h2>
+    <p class="hint" style="text-align:center;margin:-6px 0 10px">${esc(repeatText(c))}${String(c.rec)==='a'||c.freq==='asneeded'?'':c.freq==='extra'?` · earns ☆ ${c.points}`:Number(c.points)?` · ${c.points} pts toward allowance`:' · 💛 just what we do'}</p>
+    ${c.how?`<p style="font-weight:700;text-align:center;font-size:17px">${esc(c.how)}</p>`:''}
+    <div class="chips" style="justify-content:center;margin:10px 0">${who.length?who.map(q=>`<span ${pvx(q,'chipb p on')} style="display:inline-flex;align-items:center">${esc(q.name)}</span>`).join(''):'<span class="chipb on">🙋 Family pool</span>'}</div>
+    <div class="mact" style="justify-content:center"><button class="btn light" data-a="speak" data-t="${esc(c.title+'. '+(c.how||''))}">🔊 Read it to me</button>
+      ${p && !isPool(c)?`<button class="btn ${done?'light':'good'}" data-a="tick" data-c="${c.id}" data-p="${p.id}" data-close="1">${done?'Undo':'✓ Mark done'}</button>`:''}</div>
+    <div class="mact"><span class="sp"></span><button class="btn light" data-a="close">Close</button></div>`);
+}
+/* Skylight-style editor: title, picture, description, profiles, repeats (scheduled date or after completion), until, time, points. */
+function editChore(id){
+  const c = id==='new' ? {id:'new', emoji:'⭐', title:'', rec:'', freq:'weekly', every:1, slot:'anytime', days:[now().getDay()], week:1, monthDay:'', date:TODAY(), start:'', until:'', afterDays:7, months:[], time:'', points:2, how:'', assign:[], pool:false, active:true} : cfg().chores.find(x=>x.id===id);
+  modal(`<h2>${id==='new'?'New chore':'Edit chore'}</h2>
+    <div class="g3"><label class="fl">Picture<input id="f_emoji" value="${esc(c.emoji)}" maxlength="4" style="font-size:24px;text-align:center"></label><label class="fl">Chore<input id="f_title" value="${esc(c.title)}" placeholder="e.g. Water the garden"></label></div>
+    <label class="fl">Description / how to do it<textarea id="f_how" placeholder="Shown to the kids and read aloud">${esc(c.how)}</textarea></label>
+    <div class="fl">Who does it${chipRow('assign', cfg().people.map(p=>[p.id,p.name,p]).concat([['pool','🙋 Family pool']]), arr(c.assign).length?arr(c.assign):c.pool?['pool']:[])}</div>
+    <div class="part"><div class="fl">Repeats${chipRow('freq', Object.entries(REPEAT), [c.freq])}</div>
+      <div id="rp"></div></div>
+    <div class="part"><div class="fl">Time of day${chipRow('slot', Object.entries(SLOTS).map(([k,v])=>[k,v[1]]), [c.slot])}</div>
+      <div class="g2"><label class="fl">Exact time (optional)<input id="f_time" type="time" value="${esc(c.time)}"></label><label class="fl">${c.freq==='extra'?'Bonus stars':'Points (count toward allowance)'}<input id="f_points" type="number" min="0" value="${c.points}"></label></div>
+      <div class="fl">How hard is it?<div class="chips" id="lvl">${levelChips(c)}</div></div></div>
+    <div class="part"><div class="fl">Only during these months (none = all year)${chipRow('months', MON.map((m,i)=>[String(i+1),m]), arr(c.months).map(String))}</div>
+      <div class="g2"><label class="fl">Starts (optional)<input id="f_start" type="date" value="${esc(c.start)}"></label><label class="fl">Repeats until (optional)<input id="f_until" type="date" value="${esc(c.until)}"></label></div>
+      <div class="fl">Suggested for${chipRow('rec', [['r','ReiRei 4–5'],['e','Ender 7–8'],['a','Grown-ups']], String(c.rec).split(''))}</div>
+      <div class="fl">${chipRow('active', [['1','On'],['0','Paused']], [c.active?'1':'0'])}</div></div>
+    <div class="mact">${id!=='new'?`<button class="btn bad" data-a="delchore" data-c="${c.id}">Delete</button>`:''}<span class="sp"></span><button class="btn light" data-a="close">Cancel</button><button class="btn" data-a="savechore" data-c="${c.id}">Save</button></div>`);
+  drawRepeat(c);
+}
+function levelChips(c){ const L = LEVELS[c.freq==='extra'?'extra':'chore']; return L.map(([n,l])=>`<button type="button" class="chipb ${Number(c.points)===n?'on':''}" data-a="lvl" data-n="${n}">${n?l+' · '+n:'💛 '+l}</button>`).join(''); }
+function drawRepeat(c){
+  const f = chipVals('freq')[0] || c.freq, el = $('#rp'); if (!el) return;
+  const every = unit => `<div class="inl" style="margin-bottom:10px">Every <input id="f_every" type="number" min="1" value="${num(c.every)||1}" style="width:80px"> ${unit}</div>`;
+  const days = (label) => `<div class="fl">${label}${chipRow('days', DOW.map((d,i)=>[String(i),d]), arr(c.days).map(String))}</div>`;
+  el.innerHTML = {
+    once: `<label class="fl">On<input id="f_date" type="date" value="${esc(c.date||TODAY())}"></label>`,
+    daily: every('day(s)') + days('Only on these days (none = every day)'),
+    weekly: every('week(s)') + days('On'),
+    monthly: every('month(s)') + `<div class="fl">${chipRow('mmode', [['nth','On a weekday'],['date','On a date']], [num(c.monthDay)?'date':'nth'])}</div>
+      <div id="mm"><div class="fl">Which week${chipRow('week', Object.entries(WEEKN), [String(c.week||1)])}</div>${days('Which day')}</div>
+      <label class="fl" id="md" style="display:none">Day of the month<input id="f_mday" type="number" min="1" max="31" value="${esc(c.monthDay||1)}"></label>`,
+    after: `<div class="inl">Show it again <input id="f_after" type="number" min="1" value="${num(c.afterDays)||7}" style="width:80px"> days after it's done</div>`,
+    asneeded: `<p class="hint">Shows in the family chores whenever it's in season. Whoever does it marks it.</p>`,
+    extra: `<p class="hint">Shows under Extra jobs. Kids tap their name when done; a grown-up approves it for stars.</p>`,
+  }[f] || '';
+  if (f==='monthly') monthMode();
+}
+function monthMode(){ const date = chipVals('mmode')[0]==='date'; const mm=$('#mm'), md=$('#md'); if (mm) mm.style.display = date?'none':''; if (md) md.style.display = date?'':'none'; }
+
+function vSched(){
+  const ps = shown(), S0 = 6.5*60, E0 = 21.5*60, PX = 1.15, H = 48+(E0-S0)*PX, y = t => { const [h,m] = t.split(':').map(Number); return 48+(h*60+m-S0)*PX; };
+  let hrs = ''; for (let h=7; h<=21; h++) hrs += `<div class="hr" style="top:${48+(h*60-S0)*PX}px">${h>12?h-12:h}${h<12?'a':'p'}</div>`;
+  const t = now(), off = (U.day - t.getDay() + 7) % 7, date = addDays(t, off), ds = ymd(date), isT = off===0, nm = t.getHours()*60+t.getMinutes();
+  const nl = isT && nm>S0 && nm<E0 ? `<div class="now" style="top:${48+(nm-S0)*PX}px"></div>` : '';
+  const evs = S.events.filter(e => !e.allDay && ymd(new Date(e.start))===ds);
+  const hmOf = iso => { const d = new Date(iso); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; };
+  const loose = evs.filter(e => !e.tag || !e.tag.startsWith('block:')).filter(e => !e.tag?.startsWith('chore:'));
+  const cols = ps.map(p => {
+    const bl = cfg().sched.filter(b => b.who.includes(p.id) && b.days.includes(U.day)).map(b => {
+      const g = evs.find(e => e.tag==='block:'+b.id);       // Google's copy wins (edits made in Google Calendar)
+      return g ? {...b, start:hmOf(g.start), end:hmOf(g.end), title:g.title.replace(b.emoji,'').trim(), moved:true} : b; });
+    const mine = loose.filter(e => (e.title+' '+(e.desc||'')).toLowerCase().includes(p.name.toLowerCase()) || (p.full && (e.title+' '+(e.desc||'')).toLowerCase().includes(p.full.toLowerCase())));
+    return `<div ${pvx(p,'tcol')} style="--c:${col(p)};height:${H}px"><div class="hh"><span class="av s">${ini(p)}</span>${esc(p.name)}<button class="btn light sm" data-a="block" data-id="new" data-p="${p.id}">+ Add</button></div>
+      ${bl.filter(b=>b.start<b.end).map(b=>`<button class="blk" data-a="block" data-id="${b.id}" style="--bc:${b.color?PALETTE[b.color]:col(p)};top:${y(b.start)}px;height:${Math.max(16,y(b.end)-y(b.start)-2)}px">${b.emoji} ${esc(b.title)}<small>${fmtT(b.start)}–${fmtT(b.end)}</small></button>`).join('')}
+      ${mine.map(e=>`<div class="blk gc" style="--bc:${e.color||'#7a8592'};top:${y(hmOf(e.start))}px;height:${Math.max(16,y(hmOf(e.end))-y(hmOf(e.start))-2)}px">📅 ${esc(e.title)}<small>${esc(e.cal)}</small></div>`).join('')}${nl}</div>`; }).join('');
+  const unmatched = loose.filter(e => !cfg().people.some(p => (e.title+' '+(e.desc||'')).toLowerCase().includes(p.name.toLowerCase())));
+  return `<div class="bar"><h1 class="title" style="margin-right:6px">Schedules</h1>
+      ${[1,2,3,4,5,6,0].map(d=>`<button class="pill ${U.day===d?'on':''}" data-a="day" data-d="${d}">${DOWL[d].slice(0,3)}${d===t.getDay()?' •':''}</button>`).join('')}</div>
+    <div class="banner">Tap a block to change it, or "+ Add". Schedules are copied to the <b>Family Hub</b> Google Calendar as repeating events. Changes made there show up here.${remote==='local'?' (Google isn\'t connected on this copy.)':''}</div>
+    ${unmatched.length?`<div class="box" style="margin:0 0 12px"><h2 style="font-size:18px">Family calendar · ${DOWL[U.day]}</h2>${unmatched.map(e=>`<div class="hint">📅 ${fmtT(hmOf(e.start))} ${esc(e.title)}</div>`).join('')}</div>`:''}
+    <div class="tl" style="--n:${ps.length}"><div style="position:relative;height:${H}px">${hrs}</div>${cols}</div>`;
+}
+function editBlock(id, pid){
+  const b = id==='new' ? {id:'new', who:[pid], start:'16:00', end:'17:00', title:'', emoji:'⭐', days:[U.day], color:''} : cfg().sched.find(x=>x.id===id);
+  modal(`<h2>${id==='new'?'Add to the schedule':'Edit schedule'}</h2>
+    <div class="g3"><label class="fl">Picture<input id="b_emoji" value="${esc(b.emoji)}" maxlength="4" style="font-size:24px;text-align:center"></label><label class="fl">What<input id="b_title" value="${esc(b.title)}" placeholder="e.g. Piano practice"></label></div>
+    <div class="g2"><label class="fl">Starts<input id="b_start" type="time" value="${b.start}"></label><label class="fl">Ends<input id="b_end" type="time" value="${b.end}"></label></div>
+    <div class="fl">Repeats on${chipRow('bdays', DOW.map((d,i)=>[String(i),d]), b.days.map(String))}</div>
+    <div class="fl">Who${chipRow('bwho', cfg().people.map(p=>[p.id,p.name,p]), b.who)}</div>
+    <div class="fl">Color${chipRow('bcolor', [['',"Person's color"]].concat(Object.entries(PALETTE).map(([k,v])=>[k,'',null,v])), [b.color||''])}</div>
+    <div class="mact">${id!=='new'?`<button class="btn bad" data-a="delblock" data-id="${b.id}">Delete</button>`:''}<span class="sp"></span><button class="btn light" data-a="close">Cancel</button><button class="btn" data-a="saveblock" data-id="${b.id}">Save</button></div>`);
+}
+
+function vCal(){
+  const t = now(), mon = weekStart(t);
+  return `<div class="bar"><h1 class="title">This week</h1>${S.calUrl?`<a class="btn light sm" href="${esc(S.calUrl)}" target="_blank">Open in Google Calendar</a>`:''}<button class="btn sm" data-a="addevent">+ Event</button></div>
+    ${S.calError?`<div class="banner">Calendar problem: ${esc(S.calError)}</div>`:''}
+    <div class="wk">${[0,1,2,3,4,5,6].map(i=>{ const d = addDays(mon,i), ds = ymd(d), dow = d.getDay();
+    const ch = cfg().chores.filter(c => status(c)!=='off' && !['daily','extra','asneeded'].includes(c.freq) && occurs(c,d) && (U.who==='all' || arr(c.assign).includes(U.who) || isPool(c)));
+    const ev = S.events.filter(e => !(e.tag||'').startsWith('chore:') && !(e.tag||'').startsWith('block:') && (e.allDay ? (ymd(new Date(e.start))<=ds && ds<ymd(new Date(e.end))) : ymd(new Date(e.start))===ds));
+    const bl = cfg().sched.filter(b=>b.days.includes(dow) && b.who.length>=3 && U.who==='all');
+    const doneBy = c => { if (isPool(c)) return D.pool[ds+'|'+c.id]?.doneBy; return arr(c.assign).every(id=>D.done.has(key(ds,id,c.id))); };
+    return `<div class="day ${ds===TODAY()?'today':''}"><h3>${d.toLocaleDateString([],{weekday:'short'})} <b>${d.getDate()}</b></h3>
+      ${ev.map(e=>`<div class="ev" style="--c:${e.color||'#7a8592'}">📅 ${esc(e.title)}<small>${e.allDay?'All day':new Date(e.start).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})} · ${esc(e.cal)}</small></div>`).join('')}
+      ${bl.map(b=>`<div class="ev" style="--c:#8a827a">${b.emoji} ${esc(b.title)}<small>${fmtT(b.start)}</small></div>`).join('')}
+      ${ch.map(c=>{const p=arr(c.assign)[0]&&P(arr(c.assign)[0]);return `<button class="ev chore ${doneBy(c)?'dn':''}" style="--c:${p?col(p):'#8a827a'}" data-a="details" data-c="${c.id}">${c.emoji} ${esc(c.title)}<small>${arr(c.assign).length?arr(c.assign).map(id=>P(id)?.name).join(' & '):'Family pool'}</small></button>`;}).join('')}</div>`; }).join('')}</div>`;
+}
+function vRewards(){
+  const kids = cfg().people.filter(p=>p.kid && (U.who==='all'||U.who===p.id||narrow()));
+  return kids.map(p=>{ const j = D.jars[p.id], s = D.stars[p.id]||0, gc = num(p.goalCost);
+    return `<div ${pvx(p)}><div class="ph" style="margin:6px 0 4px"><span class="av">${ini(p)}</span><div><div class="nm">${esc(p.name)}</div><div class="row"><span class="stars">⭐ ${s} stars</span></div></div></div>
+    <div class="jars"><div class="jar"><b>${money(j.spend)}</b><span>SPEND</span></div><div class="jar"><b>${money(j.save)}</b><span>SAVE${p.goal?` · ${esc(p.goal)}${gc?' '+money(gc):''}`:''}</span></div><div class="jar"><b>${money(j.give)}</b><span>GIVE</span></div></div>
+    <div class="rw">${cfg().rewards.filter(r=>r.active).map(r=>{const ok=s>=r.cost;return `<button class="rc" data-a="redeem" data-r="${r.id}" data-p="${p.id}"><span class="e">${r.emoji}</span><span class="t">${esc(r.title)}</span><div class="rbar ${ok?'go':''}"><i style="width:${Math.min(100,s/r.cost*100)}%"></i><span>${ok?'Get it · ☆ '+r.cost:'☆ '+s+' / '+r.cost}</span></div></button>`;}).join('')}</div></div>`; }).join('<div style="height:24px"></div>');
+}
+function swatches(p){
+  return `<div class="sw">${Object.entries(PALETTE).map(([k,v])=>{ const owner = cfg().people.find(q=>q.color===k && q.id!==p.id);
+    return `<button class="swb ${p.color===k?'mine':''} ${owner?'taken':''}" style="--c:${v}" ${owner?`title="${esc(owner.name)} has this color" disabled`:`data-a="setcolor" data-p="${p.id}" data-k="${k}"`}>${owner?esc(ini(owner)):p.color===k?'✓':''}</button>`; }).join('')}</div>`;
+}
+function vFamily(){
+  return `<div class="bar"><h1 class="title">Family</h1><span class="hint">This order is left to right on every screen.</span><button class="btn" style="margin-left:auto" data-a="addperson">+ Add person</button></div>
+    <div class="fam">${cfg().people.map((p,i)=>`<div ${pvx(p,'fc')}><div class="top"><button class="arr" data-a="move" data-i="${i}" data-d="-1" ${i===0?'disabled':''}>◀</button><span class="av">${ini(p)}</span><span class="nm">${esc(p.name)}</span><button class="arr" data-a="move" data-i="${i}" data-d="1" ${i===cfg().people.length-1?'disabled':''}>▶</button></div>
+      <div class="g2"><label class="fl">Shown as<input data-pf="name" data-p="${p.id}" value="${esc(p.name)}"></label><label class="fl">Full name<input data-pf="full" data-p="${p.id}" value="${esc(p.full)}"></label>
+      <label class="fl">Birthday<input type="date" data-pf="bday" data-p="${p.id}" value="${esc(p.bday)}"></label>
+      <div class="fl">Kid or grown-up<div class="chips"><button class="chipb ${p.kid?'on':''}" data-a="kid" data-p="${p.id}" data-k="1">Kid</button><button class="chipb ${p.kid?'':'on'}" data-a="kid" data-p="${p.id}" data-k="0">Grown-up</button></div></div></div>
+      <div class="fl">Color</div>${swatches(p)}
+      <div class="mact"><button class="btn light sm" data-a="me" data-p="${p.id}">${DV.me===p.id?'✓ This is my phone':'This is my phone'}</button><span class="sp"></span>${cfg().people.length>1?`<button class="btn light sm" data-a="delperson" data-p="${p.id}">Remove</button>`:''}</div></div>`).join('')}</div>
+    <div class="box"><h2>Display</h2><div class="g2" style="margin-top:10px"><div class="fl">Kids' routines<div class="chips"><button class="chipb ${ST().cards==='big'?'on':''}" data-a="cards" data-v="big">Big picture cards</button><button class="chipb ${ST().cards==='list'?'on':''}" data-a="cards" data-v="list">Slim list</button></div></div>
+      <div class="fl">Theme (this device)<div class="chips"><button class="chipb ${DV.theme==='light'?'on':''}" data-a="settheme" data-v="light">☀️ Light</button><button class="chipb ${DV.theme==='dark'?'on':''}" data-a="settheme" data-v="dark">🌙 Dark</button></div></div></div></div>`;
+}
+// ---------- grown-ups ----------
+function vParent(){
+  const tabs = [['chores','📋 Chores'],['approve','✋ Approvals'+(D.pending.length?` (${D.pending.length})`:'')],['behavior','⭐ Bonus & demerits'],['guide','📘 How points work'],['payday','💰 Payday'],['money','🫙 Money jars'],['rewardsEdit','🎁 Rewards'],['history','📜 History'],['settings','⚙️ Settings & Google']];
+  const body = {chores:vChores, guide:pGuide, approve:pApprove, behavior:pBehavior, payday:pPayday, money:pMoney, rewardsEdit:pRewards, history:pHistory, settings:pSettings}[U.ptab]();
+  return `<div class="bar"><h1 class="title">Grown-ups</h1><span class="hint">Locks again after 5 minutes.</span><span style="margin-left:auto;display:flex;gap:8px"><button class="btn light sm" data-a="refresh">↻ Refresh</button><button class="btn sm" data-a="lock">Lock</button></span></div>
+    <div class="tabs">${tabs.map(([t,l])=>`<button class="pill ${U.ptab===t?'on':''}" data-a="ptab" data-t="${t}">${l}</button>`).join('')}</div>${body}`;
+}
+function pApprove(){
+  if (!D.pending.length) return `<div class="box" style="margin-top:0"><p class="hint">Nothing waiting. Extra jobs and reward requests show up here.</p></div>`;
+  return `<div class="box list" style="margin-top:0">${D.pending.map(e=>{const k=P(e.kid)||{name:e.kid};return `<div class="it"><span class="t">${esc(k.name)}: ${esc(e.title)}<small>${e.type==='extra'?`Extra job · +${e.stars} ⭐`:`Reward · ${Math.abs(e.stars)} ⭐`} · ${new Date(e.ts).toLocaleString([], {weekday:'short',hour:'numeric',minute:'2-digit'})}</small></span>
+    <button class="btn light sm" data-a="approve" data-id="${e.id}" data-ok="0">${e.type==='extra'?'Not done':'Not now'}</button><button class="btn good sm" data-a="approve" data-id="${e.id}" data-ok="1">Approve</button></div>`;}).join('')}</div>`;
+}
+const BONUS = [
+  ['Little wins', [['Got ready on time',1],['Said please & thank you without reminders',1],['Cleaned up without being asked',2],['Did a chore without being asked',2],['Good listening all day',2]]],
+  ['Big hearts', [['Kind to his brother / shared',3],['Helped a grown-up without being asked',3],['Calmed himself down',3],['Tried something hard',3],['Great attitude all day',3]]],
+  ['Above & beyond', [['Owned up / told the truth when it was hard',5],['Great report from school',5],['Big help on a family project',8],['Stood up for someone',10]]],
+];
+const DEMERIT = [
+  ['Small stuff', [['Needed 3+ reminders',1],['Whining about a chore',1],['Left a mess after being asked',2],['Chore rushed or done sloppy',2]]],
+  ['Not OK', [['Talking back / rude',3],['Unkind words to his brother',3],['Chore skipped on purpose',3],['Broke a family rule',4],['Games or screens without asking',5]]],
+  ['Serious', [['Lying',8],['Hitting, kicking or hurting',8],['Broke something on purpose',10],['Unsafe on purpose (ran off, etc.)',10]]],
+];
+function pBehavior(){
+  const kids = cfg().people.filter(p=>p.kid); if (!U.bk || !P(U.bk)) U.bk = kids[0]?.id;
+  const k = P(U.bk), today = TODAY(), cap = Number(ST().demeritCap)||15;
+  const lost = S.log.filter(e=>e.type==='demerit' && e.kid===U.bk && e.date===today).reduce((a,e)=>a+Math.abs(Number(e.stars)||0),0);
+  const btns = (groups, type) => groups.map(([g, items]) => `<div class="hint" style="margin:10px 0 6px">${g}</div><div class="chips">${items.map(([t,n])=>`<button class="btn ${type==='bonus'?'good':'bad'} sm" data-a="${type}" data-p="${U.bk}" data-n="${n}" data-t="${esc(t)}">${type==='bonus'?'+':'−'}${n} ${esc(t)}</button>`).join('')}</div>`).join('');
+  return `<div class="tabs">${kids.map(x=>`<button ${pvx(x,'pill'+(U.bk===x.id?' on':''))} data-a="bk" data-p="${x.id}"><span class="av s">${ini(x)}</span>${esc(x.name)} · ⭐ ${D.stars[x.id]||0}</button>`).join('')}</div>
+    <div class="twocol"><div class="box" style="margin-top:0"><h2>⭐ Bonus for ${esc(k?.name||'')}</h2>${btns(BONUS,'bonus')}
+      <div class="inl" style="margin-top:12px">Other: <input id="bnT" placeholder="Why" style="flex:1"><input id="bnN" type="number" value="2" min="1" style="width:70px"><button class="btn good sm" data-a="bonus" data-p="${U.bk}" data-custom="1">Give</button></div></div>
+    <div class="box" style="margin-top:0"><h2>➖ Demerit for ${esc(k?.name||'')}</h2><p class="hint" style="margin:4px 0 0">Lost today: ${lost} of ${cap} ⭐ max. Never below zero.</p>${btns(DEMERIT,'demerit')}
+      <div class="inl" style="margin-top:12px">Other: <input id="dmT" placeholder="Why" style="flex:1"><input id="dmN" type="number" value="2" min="1" style="width:70px"><button class="btn bad sm" data-a="demerit" data-p="${U.bk}" data-custom="1">Take</button></div></div></div>`;
+}
+function pGuide(){
+  const s = ST(), spd = Number(s.starsPerDollar)||10;
+  return `<div class="twocol"><div class="box" style="margin-top:0"><h2>Two kinds of points</h2>
+    <p><b>💛 Taking care of me = no pay.</b> Getting dressed, bed, teeth, hamper, reading and similar jobs are just what we do. They earn nothing, but they still have to be done before friends and games (the 🔒) and for the finish-the-day bonus.</p><p><b>💰 Helping the family = chore points → allowance.</b> Jobs that help the whole house have points by how hard they are: Easy 1 · Medium 2 · Hard 3 · Big job 5. The week's allowance is paid by the share of points earned (${[...s.tiers].sort((a,b)=>b.min-a.min).map(t=>`${t.min}%+ → ${t.pay}%`).join(', ')}). Skipping a hard chore costs more than skipping an easy one.</p>
+    <p><b>Stars → rewards or cash.</b> Stars come from extra jobs (Easy 2 · Medium 4 · Hard 6 · Big job 10), finishing the whole day (+${s.fullDayBonus}), a ${s.streakDays}-day streak (+${s.streakBonus}), and bonuses. <b>${spd} ⭐ = $1</b>, so a hard extra job (6 ⭐) is worth about 60¢ and a big one (10 ⭐) a full dollar.</p>
+    <p><b>Demerits take stars</b>: small stuff 1–2, not OK 3–5, serious 8–10. Max ${s.demeritCap} ⭐ a day, never below zero. A serious demerit costs about a dollar, or most of a movie pick.</p></div>
+    <div class="box" style="margin-top:0"><h2>Why it's set up this way</h2>
+    <p>• <b>Bonuses should outnumber demerits about 4 to 1.</b> Behavior research on reward charts (token systems) finds they work when kids mostly earn. A kid who keeps losing stops trying.</p>
+    <p>• <b>Small and right away beats big and late.</b> A quick −1 for "3 reminders" works better than a big penalty at the end of the day. Save 8–10 for safety and honesty.</p>
+    <p>• <b>Telling the truth earns more (+5) than lying costs (−8)</b>, so owning up always comes out ahead of getting caught.</p>
+    <p>• <b>The daily cap</b> keeps one bad day from wiping out weeks of saving. Past the cap, use a calm talk or time-out instead of points.</p>
+    <p>• <b>ReiRei is 4.</b> For him, smaller numbers and an instant "you lost a star" in the moment matter more than the amount.</p></div></div>`;
+}
+function pPayday(){
+  const cur = weekStart(now()), last = addDays(cur,-7), j = ST().jars;
+  const block = (ws, label) => `<div class="box" style="margin-top:0;margin-bottom:14px"><h2>${label} <span class="hint">${MON[ws.getMonth()]} ${ws.getDate()}–${MON[addDays(ws,6).getMonth()]} ${addDays(ws,6).getDate()}</span></h2><div class="list">${cfg().people.filter(p=>p.kid).map(k => {
+    const p = payFor(k, ws), paid = D.paid[k.id+'|week:'+ymd(ws)];
+    return `<div class="it" ${pvx(k)}><span class="av">${ini(k)}</span><span class="t">${esc(k.name)}: ${p.earned}/${p.possible} points (${p.pct}%)<small>${p.tier}% of ${money(p.base)} → <b>${money(p.pay)}</b> · split ${j.spend}/${j.save}/${j.give}</small></span>
+      ${!p.possible?'<span class="hint">No chores counted</span>':paid?`<span class="st">Paid ${money(paid.money)}</span>`:`<button class="btn good sm" data-a="payday" data-p="${k.id}" data-ws="${ymd(ws)}">Pay ${money(p.pay)}</button>`}</div>`; }).join('')}</div></div>`;
+  return `<div class="banner">Allowance = ${money(ST().allowancePerYear)} × age per week. Share paid: ${[...ST().tiers].sort((a,b)=>b.min-a.min).map(t=>`${t.min}%+ done → ${t.pay}%`).join(' · ')}.</div>${block(cur,'This week')}${block(last,'Last week')}`;
+}
+function pMoney(){
+  return `<div class="twocol">${cfg().people.filter(p=>p.kid).map(k => { const j = D.jars[k.id]; return `<div ${pvx(k,'box')} style="margin-top:0"><h2>${esc(k.name)}'s jars</h2>
+    <div class="jars"><div class="jar"><b>${money(j.spend)}</b><span>SPEND</span></div><div class="jar"><b>${money(j.save)}</b><span>SAVE</span></div><div class="jar"><b>${money(j.give)}</b><span>GIVE</span></div></div>
+    <div class="g2"><label class="fl">Jar<select id="jar_${k.id}"><option value="spend">Spend</option><option value="save">Save</option><option value="give">Give</option></select></label><label class="fl">Amount $<input id="amt_${k.id}" type="number" step="0.25" min="0"></label></div>
+    <label class="fl">What for<input id="what_${k.id}" placeholder="Lego set, birthday money, food bank…"></label>
+    <div class="chips"><button class="btn light sm" data-a="jar" data-p="${k.id}" data-dir="out">Take out</button><button class="btn light sm" data-a="jar" data-p="${k.id}" data-dir="in">Put in</button><button class="btn good sm" data-a="match" data-p="${k.id}">Add ${ST().matchPct}% match to Save</button></div>
+    <div class="g2" style="margin-top:12px"><label class="fl">Saving goal<input id="goal_${k.id}" value="${esc(k.goal||'')}" placeholder="e.g. Nerf blaster"></label><label class="fl">Goal $<input id="goalc_${k.id}" type="number" value="${esc(k.goalCost||'')}"></label></div>
+    <button class="btn light sm" data-a="goal" data-p="${k.id}">Save goal</button></div>`; }).join('')}</div>`;
+}
+function pRewards(){
+  return `<div class="bar"><span class="hint">Tap a reward to edit it.</span><button class="btn sm" style="margin-left:auto" data-a="editreward" data-r="new">+ New reward</button></div>
+    <div class="box list" style="margin-top:0">${cfg().rewards.map(r=>`<div class="it" style="${r.active?'':'opacity:.5'}"><span style="font-size:28px">${r.emoji}</span><button class="t" style="text-align:left" data-a="editreward" data-r="${r.id}">${esc(r.title)}<small>☆ ${r.cost}${num(r.cash)?` · gives ${money(r.cash)} to Spend`:''}</small></button></div>`).join('')}</div>`;
+}
+function pHistory(){
+  const rows = [...D.history].reverse().slice(0,150);
+  return `<div class="box list" style="margin-top:0">${rows.length?rows.map(e=>{const k=P(e.kid)||{name:e.kid};const st=D.status[e.id];const amt=['jar','payday'].includes(e.type)?money(e.money):(Number(e.stars)>0?'+':'')+(e.stars||0)+' ⭐';return `<div class="it"><span class="t">${esc(k.name)} · ${esc(e.title)}<small>${e.type}${e.jar?' · '+e.jar:''}${st?' · '+st+'d':(['extra','redeem'].includes(e.type)?' · waiting':'')} · ${new Date(e.ts).toLocaleString([], {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})}${e.note?' · '+esc(e.note):''}</small></span><b>${amt}</b></div>`;}).join(''):'<p class="hint">No history yet.</p>'}</div>`;
+}
+function pSettings(){
+  const s = ST(), f = (id,l,v,type='text',x='') => `<label class="fl">${l}<input id="s_${id}" type="${type}" value="${esc(v)}" ${x}></label>`;
+  return `<div class="twocol">
+    <div class="box" style="margin-top:0"><h2>📅 Google</h2>
+      <p class="hint">${remote==='gas'?'✓ Connected. Everything saves to the Family Hub Google Sheet, and schedules and chores go to the Family Hub calendar.':'Not connected on this copy (saving on this device only).'}</p>
+      ${S.calUrl?`<p><a class="btn light sm" href="${esc(S.calUrl)}" target="_blank">Open the Family Hub calendar</a></p>`:''}
+      ${f('shareEmails','Share the Sheet and calendar with (emails, comma separated)',s.shareEmails,'text','placeholder="chelsea@gmail.com, family@gmail.com"')}
+      <button class="btn sm" data-a="share">Share now</button>
+      ${f('calendarNames','Also show these Google calendars (names, comma separated)',s.calendarNames)}
+      <button class="btn light sm" data-a="resync">Re-send chores & schedules to Google Calendar</button></div>
+    <div class="box" style="margin-top:0"><h2>💰 Money & stars</h2><div class="g2" style="margin-top:10px">${f('allowancePerYear','Allowance $ per year of age',s.allowancePerYear,'number','step="0.25"')}${f('matchPct','Save-jar match %',s.matchPct,'number')}
+      ${f('jSpend','Spend %',s.jars.spend,'number')}${f('jSave','Save %',s.jars.save,'number')}${f('jGive','Give %',s.jars.give,'number')}${f('fullDayBonus','Finish-the-day bonus ⭐',s.fullDayBonus,'number')}
+      ${f('streakDays','Streak length (days)',s.streakDays,'number')}${f('streakBonus','Streak bonus ⭐',s.streakBonus,'number')}${f('starsPerDollar','Stars per $1',s.starsPerDollar,'number')}${f('demeritCap','Most stars lost in a day',s.demeritCap,'number')}</div>
+      ${f('tiers','Allowance tiers (done% : paid%)',[...s.tiers].sort((a,b)=>b.min-a.min).map(t=>`${t.min}:${t.pay}`).join(', '))}</div>
+    <div class="box" style="margin-top:0"><h2>🔐 Lock</h2>${f('pin','Parent PIN (4–6 digits)',s.pin,'text','inputmode="numeric" maxlength="6"')}
+      <div class="fl">Sounds${chipRow('sound',[['1','On'],['0','Off']],[s.sound?'1':'0'])}</div></div></div>
+    <div style="margin-top:14px"><button class="btn good" data-a="savesettings">Save settings</button></div>`;
+}
+
+// ---------- actions ----------
+const A = {
+  nav: d => { if (d.v==='parent' && !isParent()){ needParent(()=>{ U.view='parent'; render(); }); return 'skip'; } U.view = d.v; modal(''); },
+  who: d => { U.who = d.id; }, day: d => { U.day = Number(d.d); },
+  theme: () => { DV.theme = DV.theme==='dark'?'light':'dark'; saveDev(); }, settheme: d => { DV.theme = d.v; saveDev(); },
+  cards: d => needParent(() => { ST().cards = d.v; saveConfig(); render(); }),
+  me: d => { DV.me = DV.me===d.p ? '' : d.p; saveDev(); toast(DV.me ? `This device opens on ${P(d.p).name}` : 'Cleared'); },
+  ring: d => { U.ring[d.p] = U.ring[d.p]===d.g ? null : d.g; },
+  close: (d, el, ev) => { if (d.self && ev.target!==el) return 'skip'; modal(''); return 'skip'; },
+  pin: d => {
+    if (d.n==='✕'){ modal(''); return 'skip'; }
+    if (d.n==='⌫') pinBuf = pinBuf.slice(0,-1); else pinBuf += d.n;
+    if (pinBuf.length >= String(ST().pin).length){
+      if (pinBuf === String(ST().pin)){ U.parentUntil = Date.now()+5*60*1000; modal(''); const t = pinThen; pinThen = null; render(); t && t(); return 'skip'; }
+      pinBuf = ''; drawPin('Try again'); return 'skip';
+    }
+    drawPin(); return 'skip';
+  },
+  lock: () => { U.parentUntil = 0; U.view = 'today'; },
+  speak: d => { say(d.t); return 'skip'; },
+  color: d => { const p = P(d.p); modal(`<h2>${esc(p.name)}, pick your color!</h2>${swatches(p)}<p class="hint" style="margin-top:12px">Colors with a letter belong to someone else.</p><div class="mact"><span class="sp"></span><button class="btn" data-a="close">Done</button></div>`); return 'skip'; },
+  setcolor: d => { const p = P(d.p); if (cfg().people.some(q=>q.color===d.k && q.id!==p.id)) return 'skip'; p.color = d.k; saveConfig('Color saved'); const open = !!$('#modal').innerHTML; render(); if (open) A.color(d); return 'skip'; },
+  tick: d => {
+    const p = P(d.p), c = cfg().chores.find(x=>x.id===d.c), ds = TODAY(), was = D.done.has(key(ds,p.id,c.id));
+    const gateBefore = listFor(p, now()).filter(x => arr(ST().gateSlots).includes(x.g) && !x.d).length;
+    log({kid:p.id, type: was?'undo':'done', ref:c.id, title:c.title, pts:Number(c.points)||0}); D = derive(); blip(!was);
+    if (d.close) modal('');
+    afterTick(p, ds, was, gateBefore);
+  },
+  details: d => { details(d.c, d.p); return 'skip'; },
+  moveday: d => needParent(() => { const c = cfg().chores.find(x=>x.id===d.c), v = chipVals('mv').map(Number).sort(); if (!v.length) return toast('Pick at least one day'); c.days = v; modal(''); saveConfig('Moved to '+v.map(x=>DOWL[x]).join(', ')); render(); }),
+  pick: d => { const c = cfg().chores.find(x=>x.id===d.c); modal(`<h2>${d.m==='take'?"Who's taking it?":'Who did it?'}</h2><p class="hint" style="margin-top:-8px">${c.emoji} ${esc(c.title)}</p>
+      <div class="chips" style="margin:14px 0">${cfg().people.map(p=>`<button ${pvx(p,'chipb on')} style="height:52px;font-size:16px;padding:0 18px" data-a="${d.m==='take'?'take':'pooldone'}" data-c="${c.id}" data-p="${p.id}">${esc(p.name)}</button>`).join('')}</div>
+      <div class="mact"><span class="sp"></span><button class="btn light" data-a="close">Cancel</button></div>`); return 'skip'; },
+  take: d => { const c = cfg().chores.find(x=>x.id===d.c); log({kid:d.p, type:'take', ref:c.id, title:c.title}); modal(''); toast(`${P(d.p).name} is taking it`); },
+  release: d => { const c = cfg().chores.find(x=>x.id===d.c), k = D.pool[TODAY()+'|'+c.id]; log({kid:k?.taker||'', type:'release', ref:c.id, title:c.title}); },
+  pooldone: d => { const c = cfg().chores.find(x=>x.id===d.c), p = P(d.p), k = D.pool[TODAY()+'|'+c.id];
+    if (k && k.doneBy){ log({kid:k.doneBy, type:'poolundo', ref:c.id, title:c.title, stars: P(k.doneBy)?.kid ? Number(c.points)||0 : ''}); }
+    else { log({kid:p.id, type:'pooldone', ref:c.id, title:c.title, stars: p.kid ? Number(c.points)||0 : ''}); blip(); toast(`Done by ${p.name} ✓${p.kid&&c.points?` · +${c.points} ⭐`:''}`); }
+    modal(''); },
+  poolundo: d => { const c = cfg().chores.find(x=>x.id===d.c), k = D.pool[TODAY()+'|'+c.id]; if (k && k.doneBy) log({kid:k.doneBy, type:'poolundo', ref:c.id, title:c.title, stars: P(k.doneBy)?.kid ? Number(c.points)||0 : ''}); },
+  extra: d => { const c = cfg().chores.find(x=>x.id===d.c), p = P(d.p), n = D.extraCount[key(TODAY(),p.id,c.id)]||0;
+    if (n) { toast(`${p.name} already did this today`); return 'skip'; }
+    modal(`<div class="big">${c.emoji}</div><h2 style="text-align:center">${esc(c.title)}</h2><p class="hint" style="text-align:center">${esc(p.name)}, did you finish it? A grown-up will check it and give you ${c.points} ⭐.</p><div class="mact" style="justify-content:center"><button class="btn light" data-a="close">Not yet</button><button class="btn good" data-a="extrayes" data-c="${c.id}" data-p="${p.id}">Yes, I did it!</button></div>`); return 'skip'; },
+  extrayes: d => { const c = cfg().chores.find(x=>x.id===d.c); log({kid:d.p, type:'extra', ref:c.id, title:c.title, stars:Number(c.points)||0, status:'pending'}); modal(''); blip(); toast('Nice! Waiting for a grown-up to check it ✔'); },
+  redeem: d => { const p = P(d.p), r = cfg().rewards.find(x=>x.id===d.r), s = D.stars[p.id]||0;
+    if (s < r.cost){ say(`You need ${r.cost-s} more stars`); toast(`${r.cost-s} more ⭐ to go!`); return 'skip'; }
+    modal(`<div class="big">${r.emoji}</div><h2 style="text-align:center">${esc(r.title)}</h2><p class="hint" style="text-align:center">Spend ${r.cost} ⭐? A grown-up will say OK.</p><div class="mact" style="justify-content:center"><button class="btn light" data-a="close">Keep saving</button><button class="btn good" data-a="redeemyes" data-r="${r.id}" data-p="${p.id}">Yes, spend ${r.cost} ⭐</button></div>`); return 'skip'; },
+  redeemyes: d => { const r = cfg().rewards.find(x=>x.id===d.r); log({kid:d.p, type:'redeem', ref:r.id, title:r.title, stars:-Math.abs(r.cost), status:'pending'}); modal(''); toast('Asked a grown-up!'); },
+  approve: d => needParent(() => { const e = S.log.find(x=>x.id===d.id); log({kid:e.kid, type:d.ok==='1'?'approve':'reject', ref:e.id, title:e.title, by:'parent'});
+    if (d.ok==='1' && e.type==='redeem'){ const r = cfg().rewards.find(x=>x.id===e.ref); if (r && num(r.cash)) log({kid:e.kid, type:'jar', jar:'spend', money:num(r.cash), title:'Stars traded for cash', ref:e.id}); }
+    render(); }),
+  ptab: d => { U.ptab = d.t; },
+  bk: d => { U.bk = d.p; },
+  bonus: d => needParent(() => { const n = d.custom ? Number($('#bnN').value)||1 : Number(d.n), why = d.custom ? ($('#bnT').value||'Bonus') : d.t;
+    log({kid:d.p, type:'bonus', ref:'parent:'+uid(), stars:n, title:why, by:'parent'}); toast(`${P(d.p).name}: +${n} ⭐ · ${why}`); confetti(col(P(d.p))); render(); }),
+  demerit: d => needParent(() => { let n = d.custom ? Number($('#dmN').value)||1 : Number(d.n); const why = d.custom ? ($('#dmT').value||'Demerit') : d.t, cap = Number(ST().demeritCap)||15;
+    const lost = S.log.filter(e=>e.type==='demerit' && e.kid===d.p && e.date===TODAY()).reduce((a,e)=>a+Math.abs(Number(e.stars)||0),0);
+    if (lost >= cap) return toast(`${P(d.p).name} hit today's limit (${cap} ⭐). Time for a talk instead.`);
+    n = Math.min(n, cap-lost); log({kid:d.p, type:'demerit', stars:-n, title:why, by:'parent'}); toast(`${P(d.p).name}: −${n} ⭐ · ${why}`); render(); }),
+  payday: d => needParent(() => { const k = P(d.p), ws = pd(d.ws), p = payFor(k, ws), ref = 'week:'+d.ws, j = ST().jars;
+    if (D.paid[k.id+'|'+ref]) return toast('Already paid for that week');
+    const sp = Math.round(p.pay*j.spend)/100, sv = Math.round(p.pay*j.save)/100, gv = Math.round((p.pay-sp-sv)*100)/100;
+    log({kid:k.id, type:'payday', ref, title:`Allowance, week of ${d.ws}`, pts:p.earned, money:p.pay, note:`${p.earned}/${p.possible} pts = ${p.pct}% → ${p.tier}% of ${money(p.base)}`, by:'parent'});
+    [['spend',sp],['save',sv],['give',gv]].forEach(([jar,m]) => { if (m) log({kid:k.id, type:'jar', jar, money:m, title:'Allowance', ref}); });
+    call('apiWeekly', {weekOf:d.ws, kid:k.name, possible:p.possible, earned:p.earned, percent:p.pct, allowance:p.pay, spend:sp, save:sv, give:gv}).catch(()=>{});
+    toast(`${k.name} gets ${money(p.pay)} this week`); confetti(col(k)); render(); }),
+  jar: d => needParent(() => { const jar = $('#jar_'+d.p).value, amt = Number($('#amt_'+d.p).value), what = $('#what_'+d.p).value || (d.dir==='out'?'Spent':'Added');
+    if (!amt) return toast('Type an amount first'); if (d.dir==='out' && amt > D.jars[d.p][jar]) return toast(`Only ${money(D.jars[d.p][jar])} in ${jar}`);
+    log({kid:d.p, type:'jar', jar, money: d.dir==='out'?-amt:amt, title:what, by:'parent'}); render(); }),
+  match: d => needParent(() => { const m = Math.round(D.jars[d.p].save*(Number(ST().matchPct)||0))/100; if (m<.01) return toast('Nothing in Save yet');
+    log({kid:d.p, type:'jar', jar:'save', money:m, title:`Parent match ${ST().matchPct}%`, by:'parent'}); toast(`Save jar grew by ${money(m)}!`); confetti(col(P(d.p))); render(); }),
+  goal: d => needParent(() => { const k = P(d.p); k.goal = $('#goal_'+d.p).value; k.goalCost = $('#goalc_'+d.p).value; saveConfig('Goal saved'); render(); }),
+  lib: d => { U.lib = d.k; }, libs: d => { U.libStatus = d.k; },
+  assign: d => needParent(() => { const c = cfg().chores.find(x=>x.id===d.c);
+    if (d.p==='pool'){ const was = isPool(c); c.assign = []; c.pool = !was; }
+    else { c.assign = arr(c.assign).includes(d.p) ? arr(c.assign).filter(x=>x!==d.p) : arr(c.assign).concat(d.p); if (c.assign.length) c.pool = false; }
+    render(); clearTimeout(A._t); A._t = setTimeout(()=>saveConfig('Saved'), 1500); }),
+  edit: d => needParent(() => editChore(d.c)),
+  chip: (d, el) => { const row = el.parentElement, g = row.dataset.group;
+    if (SINGLE.includes(g) || ['active','sound'].includes(g)) { row.querySelectorAll('.chipb').forEach(b=>b.classList.remove('on')); el.classList.add('on'); }
+    else if (g==='assign' && d.v==='pool') { row.querySelectorAll('.chipb').forEach(b=>b!==el&&b.classList.remove('on')); el.classList.toggle('on'); }
+    else { if (g==='assign') row.querySelector('[data-v="pool"]').classList.remove('on'); el.classList.toggle('on'); }
+    if (g==='bcolor') row.querySelectorAll('.chipb').forEach(b=>{ if (b.style.background) b.style.boxShadow = b.classList.contains('on')?'0 0 0 3px var(--ink)':''; });
+    if (g==='freq'){ const id = $('[data-a=savechore]').dataset.c; const base = id==='new' ? {days:[now().getDay()], every:1, week:1, afterDays:7, date:TODAY()} : cfg().chores.find(x=>x.id===id); drawRepeat(Object.assign({}, base, {freq:d.v})); }
+    if (g==='freq' && $('#lvl')) $('#lvl').innerHTML = levelChips({freq:d.v, points:Number($('#f_points').value)});
+    if (g==='mmode') monthMode();
+    return 'skip'; },
+  lvl: (d, el) => { $('#f_points').value = d.n; el.parentElement.querySelectorAll('.chipb').forEach(b=>b.classList.toggle('on', b===el)); return 'skip'; },
+  savechore: d => { const title = $('#f_title').value.trim(); if (!title){ toast('Give the chore a name'); return 'skip'; }
+    const asg = chipVals('assign'), freq = chipVals('freq')[0] || 'weekly', g = id => $('#'+id) ? $('#'+id).value : '';
+    const v = {emoji:$('#f_emoji').value||'⭐', title, how:$('#f_how').value, freq, every:Math.max(1,Number(g('f_every'))||1), days:chipVals('days').map(Number).sort(), slot:chipVals('slot')[0]||'anytime', time:g('f_time'),
+      points:Number($('#f_points').value)||0, months:chipVals('months').map(Number).sort((a,b)=>a-b), start:g('f_start'), until:g('f_until'), rec:chipVals('rec').join(''), active:chipVals('active')[0]!=='0',
+      assign:asg.filter(x=>x!=='pool'), pool:asg.includes('pool')};
+    if (freq==='once') v.date = g('f_date') || TODAY();
+    if (freq==='after') v.afterDays = Math.max(1, Number(g('f_after'))||7);
+    if (freq==='monthly'){ if (chipVals('mmode')[0]==='date'){ v.monthDay = Number(g('f_mday'))||1; v.days = []; } else { v.monthDay = ''; v.week = Number(chipVals('week')[0]||1); v.days = v.days.slice(0,1); if (!v.days.length) v.days = [6]; } }
+    if (freq==='weekly' && !v.days.length){ toast('Pick at least one day'); return 'skip'; }
+    if (d.c==='new') cfg().chores.unshift(Object.assign({id:'c'+uid(), week:1, monthDay:'', date:'', afterDays:7, cat: U.lib==='laundry'?'laundry':''}, v)); else Object.assign(cfg().chores.find(x=>x.id===d.c), v);
+    modal(''); saveConfig(d.c==='new'?'Chore added':'Chore saved'); },
+  delchore: d => needParent(() => { if (!confirm('Delete this chore?')) return; S.config.chores = cfg().chores.filter(x=>x.id!==d.c); modal(''); saveConfig('Chore deleted'); render(); }),
+  block: d => needParent(() => editBlock(d.id, d.p)),
+  saveblock: d => { const title = $('#b_title').value.trim(); if (!title){ toast('Give it a name'); return 'skip'; }
+    const v = {title, emoji:$('#b_emoji').value||'⭐', start:$('#b_start').value, end:$('#b_end').value, days:chipVals('bdays').map(Number), who:chipVals('bwho'), color:chipVals('bcolor')[0]||''};
+    if (!v.who.length){ toast("Pick who it's for"); return 'skip'; } if (!v.days.length){ toast('Pick at least one day'); return 'skip'; } if (v.end<=v.start){ toast('End time must be after the start'); return 'skip'; }
+    if (d.id==='new') cfg().sched.push(Object.assign({id:'s'+uid()}, v)); else Object.assign(cfg().sched.find(x=>x.id===d.id), v);
+    modal(''); saveConfig('Saved. Updating Google Calendar…'); },
+  delblock: d => { if (!confirm('Delete this from the schedule?')) return 'skip'; S.config.sched = cfg().sched.filter(x=>x.id!==d.id); modal(''); saveConfig('Deleted'); },
+  move: d => needParent(() => { const i = Number(d.i), j = i+Number(d.d), L = cfg().people; [L[i], L[j]] = [L[j], L[i]]; saveConfig('Order saved'); render(); }),
+  kid: d => needParent(() => { P(d.p).kid = d.k==='1'; saveConfig(); render(); }),
+  addperson: () => needParent(() => { const free = Object.keys(PALETTE).find(k=>!cfg().people.some(p=>p.color===k)); cfg().people.push({id:'p'+uid(), name:'New person', full:'', kid:false, color:free, bday:'', allowance:'', goal:'', goalCost:''}); saveConfig(); render(); }),
+  delperson: d => needParent(() => { if (!confirm(`Remove ${P(d.p).name}? Their chores go back to "not used".`)) return; S.config.people = cfg().people.filter(p=>p.id!==d.p); cfg().chores.forEach(c=>c.assign=arr(c.assign).filter(x=>x!==d.p)); cfg().sched.forEach(b=>b.who=b.who.filter(x=>x!==d.p)); saveConfig(); render(); }),
+  editreward: d => { const r = d.r==='new' ? {id:'new', emoji:'🎁', title:'', cost:20, cash:'', active:true} : cfg().rewards.find(x=>x.id===d.r);
+    modal(`<h2>${d.r==='new'?'New reward':'Edit reward'}</h2><div class="g3"><label class="fl">Picture<input id="r_emoji" value="${esc(r.emoji)}" maxlength="4" style="font-size:24px;text-align:center"></label><label class="fl">Reward<input id="r_title" value="${esc(r.title)}"></label></div>
+      <div class="g2"><label class="fl">Stars needed<input id="r_cost" type="number" min="1" value="${r.cost}"></label><label class="fl">Cash to Spend jar (optional)<input id="r_cash" type="number" step="0.25" value="${esc(r.cash)}"></label></div>
+      <div class="fl">${chipRow('active', [['1','On'],['0','Hidden']], [r.active?'1':'0'])}</div>
+      <div class="mact">${d.r!=='new'?`<button class="btn bad" data-a="delreward" data-r="${r.id}">Delete</button>`:''}<span class="sp"></span><button class="btn light" data-a="close">Cancel</button><button class="btn" data-a="savereward" data-r="${r.id}">Save</button></div>`); return 'skip'; },
+  savereward: d => { const v = {emoji:$('#r_emoji').value||'🎁', title:$('#r_title').value.trim(), cost:Math.max(1,Number($('#r_cost').value)||1), cash:$('#r_cash').value, active:chipVals('active')[0]!=='0'}; if (!v.title){ toast('Name the reward'); return 'skip'; }
+    if (d.r==='new') cfg().rewards.push(Object.assign({id:'r'+uid()}, v)); else Object.assign(cfg().rewards.find(x=>x.id===d.r), v); modal(''); saveConfig('Reward saved'); },
+  delreward: d => { if (!confirm('Delete this reward?')) return 'skip'; S.config.rewards = cfg().rewards.filter(x=>x.id!==d.r); modal(''); saveConfig('Deleted'); },
+  savesettings: () => { const s = ST(), g = id => $('#s_'+id).value;
+    if (/^\d{4,6}$/.test(g('pin'))) s.pin = g('pin'); else toast('PIN must be 4–6 digits; kept the old one');
+    s.allowancePerYear = Number(g('allowancePerYear')); s.matchPct = Number(g('matchPct')); s.jars = {spend:Number(g('jSpend')), save:Number(g('jSave')), give:Number(g('jGive'))};
+    s.starsPerDollar = Number(g('starsPerDollar'))||10; s.demeritCap = Number(g('demeritCap'))||15; s.fullDayBonus = Number(g('fullDayBonus')); s.streakDays = Number(g('streakDays')); s.streakBonus = Number(g('streakBonus')); s.sound = chipVals('sound')[0]==='1';
+    const tiers = g('tiers').split(',').map(x=>x.split(':').map(Number)).filter(x=>x.length===2&&!x.some(isNaN)).map(([min,pay])=>({min,pay})); if (tiers.length) s.tiers = tiers;
+    s.calendarNames = g('calendarNames'); s.shareEmails = g('shareEmails'); saveConfig('Settings saved'); },
+  share: () => { const e = $('#s_shareEmails').value; ST().shareEmails = e; if (!e.trim()) { toast('Type at least one email'); return 'skip'; }
+    call('apiShare', e).then(r => toast('Shared with '+r.shared.join(', '))).catch(err => toast('Could not share: '+(err.message||err))); saveConfig(' '); return 'skip'; },
+  resync: () => { saveConfig('Sent to Google Calendar'); return 'skip'; },
+  addevent: () => { modal(`<h2>Add to the Family Hub calendar</h2><label class="fl">What<input id="ev_t" placeholder="Soccer practice"></label><div class="g2"><label class="fl">Date<input id="ev_d" type="date" value="${TODAY()}"></label><label class="fl">Start (blank = all day)<input id="ev_s" type="time"></label><label class="fl">Minutes<input id="ev_m" type="number" value="60"></label></div>
+      <div class="fl">Who${chipRow('evwho', cfg().people.map(p=>[p.id,p.name,p]), [])}</div><div class="mact"><span class="sp"></span><button class="btn light" data-a="close">Cancel</button><button class="btn" data-a="addeventyes">Add</button></div>`); return 'skip'; },
+  addeventyes: () => { const t = $('#ev_t').value.trim(); if (!t){ toast('Add a title'); return 'skip'; } if (remote==='local'){ toast('Google is not connected on this copy'); return 'skip'; }
+    const who = chipVals('evwho').map(id=>P(id).name).join(', ');
+    call('apiAddEvent', {title:t, date:$('#ev_d').value, time:$('#ev_s').value, mins:$('#ev_m').value, who}).then(()=>{ toast('Added to Google Calendar'); pull(); }).catch(e=>toast('Could not add: '+(e.message||e))); modal(''); return 'skip'; },
+  refresh: () => { pull(); toast('Refreshing…'); return 'skip'; },
+};
+function afterTick(p, ds, was, gateBefore){
+  const s = ST(), list = listFor(p, now()), allDone = list.length && list.every(x=>x.d), fk = 'fullday:'+ds, have = (D.bonus[p.id+'|'+fk]||0) > 0;
+  if (!p.kid) { if (!was && allDone) { confetti(col(p)); toast(`🏆 ${p.name} finished everything today!`); } return; }
+  if (!was){
+    const gl = list.filter(x => arr(s.gateSlots).includes(x.g) && !x.d).length;
+    if (allDone && !have){
+      log({kid:p.id, type:'bonus', ref:fk, stars:Number(s.fullDayBonus)||0, title:'Finished every chore today'}); D = derive();
+      let streak = 0; for (let i=0;i<60;i++){ if ((D.bonus[p.id+'|fullday:'+ymd(addDays(pd(ds),-i))]||0) > 0) streak++; else break; }
+      const sb = streak && streak % (Number(s.streakDays)||7) === 0; if (sb) log({kid:p.id, type:'bonus', ref:'streak:'+ds, stars:Number(s.streakBonus)||0, title:`${streak}-day streak!`});
+      confetti(col(p)); say(`Great job ${p.name}! You finished everything today!`);
+      modal(`<div class="big">🏆</div><h2 style="text-align:center">${esc(p.name)} finished everything!</h2><p class="hint" style="text-align:center">+${s.fullDayBonus} bonus ⭐${sb?` and +${s.streakBonus} ⭐ for a ${streak}-day streak!`:''}</p><div class="mact" style="justify-content:center"><button class="btn good" data-a="close">Yay!</button></div>`);
+    } else if (gateBefore && !gl){ confetti(col(p)); say(`${p.name}, play time is unlocked!`); toast(`🔓 ${p.name}: friends & games unlocked!`); }
+  } else if (have && !allDone){
+    log({kid:p.id, type:'bonus', ref:fk, stars:-(Number(s.fullDayBonus)||0), title:'Undo: day not finished'});
+    if ((D.bonus[p.id+'|streak:'+ds]||0) > 0) log({kid:p.id, type:'bonus', ref:'streak:'+ds, stars:-(Number(s.streakBonus)||0), title:'Undo streak'});
+  }
+}
+document.addEventListener('click', ev => {
+  const el = ev.target.closest('[data-a]'); if (!el) return; const fn = A[el.dataset.a]; if (!fn) return;
+  const r = fn(el.dataset, el, ev); if (r !== 'skip') render();
+  if (isParent()) U.parentUntil = Date.now()+5*60*1000;
+});
+document.addEventListener('change', ev => { const el = ev.target; if (el.dataset.pf){ if (!isParent()){ needParent(()=>{}); render(); return; } const p = P(el.dataset.p); p[el.dataset.pf] = el.value || (el.dataset.pf==='name'?'?':''); saveConfig(); render(); } });
+addEventListener('resize', () => { clearTimeout(A._r); A._r = setTimeout(() => { if (!busy()) render(); }, 200); });
+
+// ---------- start ----------
+(function boot(){
+  try { const j = JSON.parse(localStorage.getItem(LS)||'null'); if (j){ S.config = j.config; S.log = j.log||[]; S.outbox = j.outbox||[]; } } catch(e){}
+  S.config = normalize(S.config);
+  if (!ST().startDate){ ST().startDate = TODAY(); store(); }
+  remote = (window.google && google.script && google.script.run) ? 'gas' : (location.protocol.startsWith('http') && apiKey() ? 'url' : 'local');
+  if ('serviceWorker' in navigator && remote==='url') navigator.serviceWorker.register('sw.js').catch(()=>{});
+  if (DV.me) U.who = narrow() ? DV.me : 'all';
+  render(); syncDot(remote==='local'?'':'busy');
+  pull(true);
+  let lastDay = TODAY();
+  setInterval(() => { if (TODAY()!==lastDay){ lastDay = TODAY(); U.day = now().getDay(); } if (U.view==='parent' && !isParent()) U.view = 'today'; if (!busy()) render(); }, 30000);
+  setInterval(() => { if (!busy()) pull(); }, 90000);
+  setInterval(flush, 20000);
+})();
+</script>
+</body>
+</html>
