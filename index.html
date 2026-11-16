@@ -536,6 +536,7 @@ function migrate2(){
   Object.assign(ST(), {starsPerDollar: ST().starsPerDollar||10, demeritCap: ST().demeritCap||15, libVersion:3});
   setTimeout(() => saveConfig('Updated chore pay'), 500);
 }
+const BUILD = 'b1794867452';
 const API_URL = 'https://script.google.com/macros/s/AKfycbyoX9RyIVAe9s1XqT2HSGd_3TQNCSMhimvJiXeCruDh_SXKNd1rlByP81FuXellq3ki/exec';
 function apiKey(){ const q = new URLSearchParams(location.search).get('key'); if (q){ localStorage.setItem('familyhub.key', q); history.replaceState(null,'',location.pathname); } return localStorage.getItem('familyhub.key') || ''; }
 function call(fn, ...args){
@@ -556,6 +557,9 @@ async function pull(first){
   try {
     syncDot('busy');
     const j = await call('apiGetAll');
+    if (j.build && j.build !== BUILD && !S.outbox.length){        // a newer version was published: reload into it (once)
+      const r = JSON.parse(sessionStorage.getItem('fh.reload') || '{}'), n = r.b === j.build ? r.n || 0 : 0;
+      if (n < 4 && (r.b !== j.build || Date.now() - r.t > 120000)){ sessionStorage.setItem('fh.reload', JSON.stringify({b:j.build, n:n+1, t:Date.now()})); store(); location.reload(); return; } }
     if (j.config){ S.config = normalize(j.config); if ((Number(ST().libVersion)||1) < 3) migrate2(); if ((Number(ST().libVersion)||1) < 4){ if (String(ST().pin)==='1234') ST().pin = '8057'; ST().libVersion = 4; setTimeout(() => saveConfig('PIN updated'), 800); }
       if ((Number(ST().libVersion)||1) < 5){ const drop = ['Match socks from the laundry','Fold & put away my laundry','Put clean clothes in my drawers','Laundry: wash, dry, fold'];
         S.config.chores = cfg().chores.filter(c => !drop.includes(c.title)); const have = new Set(cfg().chores.map(c=>c.id));
