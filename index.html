@@ -616,14 +616,14 @@ function vToday(){
 }
 
 function vChores(){
-  const tabs = [['all','Everything'],['laundry','🧺 Laundry'],['r','Suggested for ReiRei (4–5)'],['e','Suggested for Ender (7–8)'],['a','Grown-ups & house'],['extra','Extra jobs']];
+  const tabs = [['all','Everything'],['laundry','🧺 Laundry'],['r','Suggested for ReiRei'],['e','Suggested for Ender'],['a','Grown-ups & house'],['extra','Extra jobs']];
   const sts = [['all','Any status'],['assigned','Assigned'],['pool','Family pool'],['off','Not used']];
   let list = cfg().chores.filter(c => U.lib==='all' || (U.lib==='laundry' ? c.cat==='laundry' : U.lib==='extra' ? c.freq==='extra' : c.freq!=='extra' && String(c.rec).includes(U.lib)));
   if (U.libStatus!=='all') list = list.filter(c => status(c)===U.libStatus);
   const order = ['daily','weekly','monthly','after','once','asneeded','extra'], gn = {daily:'Every day',weekly:'Weekly',monthly:'Monthly',after:"After it's done",once:'One time',asneeded:'As needed',extra:'Extra jobs (bonus stars)'};
   const rows = order.map(f => { const l = list.filter(c=>c.freq===f); if (!l.length) return '';
     return `<div class="grp">${gn[f]} <span class="hint">(${l.length})</span></div>` + l.map(c => `<div class="li" style="${c.active?'':'opacity:.5'}"><span class="e">${c.emoji}</span>
-      <button class="t" data-a="edit" data-c="${c.id}">${esc(c.title)}<small>${String(c.rec).includes('r')?'<span class="tag tr">ReiRei 4–5</span>':''}${String(c.rec).includes('e')?'<span class="tag te">Ender 7–8</span>':''}${String(c.rec).includes('a')?'<span class="tag ta">Grown-ups</span>':''}${esc(repeatText(c))}${c.freq==='asneeded'||String(c.rec)==='a'?'':Number(c.points)?` · ${levelName(c)} (${c.freq==='extra'?'☆ '+c.points+' stars':c.points+' pts'})`:' · 💛 No pay · just what we do'}</small></button>
+      <button class="t" data-a="edit" data-c="${c.id}">${esc(c.title)}<small>${String(c.rec).includes('r')?'<span class="tag tr">ReiRei</span>':''}${String(c.rec).includes('e')?'<span class="tag te">Ender</span>':''}${String(c.rec).includes('a')?'<span class="tag ta">Grown-ups</span>':''}${esc(repeatText(c))}${c.freq==='asneeded'||String(c.rec)==='a'?'':Number(c.points)?` · ${levelName(c)} (${c.freq==='extra'?'☆ '+c.points+' stars':c.points+' pts'})`:' · 💛 No pay · just what we do'}</small></button>
       <span class="as">${cfg().people.map(p=>`<button ${pvx(p,'ab'+(arr(c.assign).includes(p.id)?' on':''))} data-a="assign" data-c="${c.id}" data-p="${p.id}">${esc(p.name)}</button>`).join('')}<button class="ab abpool ${isPool(c)?'on':''}" data-a="assign" data-c="${c.id}" data-p="pool">🙋 Pool</button></span></div>`).join(''); }).join('');
   return `<div class="bar"><span class="hint">${cfg().chores.length} chores. Tap a chore to edit it. Tap a name to give it to someone; tap again to take it away.</span><button class="btn" style="margin-left:auto" data-a="edit" data-c="new">+ New chore</button></div>
     <div class="tabs">${tabs.map(([k,l])=>`<button class="pill ${U.lib===k?'on':''}" data-a="lib" data-k="${k}">${l}</button>`).join('')}</div>
@@ -663,7 +663,7 @@ function editChore(id){
       <div class="fl">How hard is it?<div class="chips" id="lvl">${levelChips(c)}</div></div></div>
     <div class="part"><div class="fl">Only during these months (none = all year)${chipRow('months', MON.map((m,i)=>[String(i+1),m]), arr(c.months).map(String))}</div>
       <div class="g2"><label class="fl">Starts (optional)<input id="f_start" type="date" value="${esc(c.start)}"></label><label class="fl">Repeats until (optional)<input id="f_until" type="date" value="${esc(c.until)}"></label></div>
-      <div class="fl">Suggested for${chipRow('rec', [['r','ReiRei 4–5'],['e','Ender 7–8'],['a','Grown-ups']], String(c.rec).split(''))}</div>
+      <div class="fl">Suggested for${chipRow('rec', [['r','ReiRei'],['e','Ender'],['a','Grown-ups']], String(c.rec).split(''))}</div>
       <div class="fl">${chipRow('active', [['1','On'],['0','Paused']], [c.active?'1':'0'])}</div></div>
     <div class="mact">${id!=='new'?`<button class="btn bad" data-a="delchore" data-c="${c.id}">Delete</button>`:''}<span class="sp"></span><button class="btn light" data-a="close">Cancel</button><button class="btn" data-a="savechore" data-c="${c.id}">Save</button></div>`);
   drawRepeat(c);
@@ -802,7 +802,7 @@ function pGuide(){
     <p>• <b>Small and right away beats big and late.</b> A quick −1 for "3 reminders" works better than a big penalty at the end of the day. Save 8–10 for safety and honesty.</p>
     <p>• <b>Telling the truth earns more (+5) than lying costs (−8)</b>, so owning up always comes out ahead of getting caught.</p>
     <p>• <b>The daily cap</b> keeps one bad day from wiping out weeks of saving. Past the cap, use a calm talk or time-out instead of points.</p>
-    <p>• <b>ReiRei is 4.</b> For him, smaller numbers and an instant "you lost a star" in the moment matter more than the amount.</p></div></div>`;
+    <p>• <b>For ReiRei</b>, smaller numbers and an instant "you lost a star" in the moment matter more than the amount.</p></div></div>`;
 }
 function pPayday(){
   const cur = weekStart(now()), last = addDays(cur,-7), j = ST().jars;
