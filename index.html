@@ -35,7 +35,7 @@ textarea{height:70px;padding:10px 12px}
 .head .time{font-weight:800;color:var(--muted);font-size:17px}
 .head .r{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .sync{width:10px;height:10px;border-radius:50%;background:var(--muted)} .sync.ok{background:var(--good)} .sync.busy{background:#d9a432} .sync.err{background:var(--bad)}
-.pill{height:38px;padding:0 14px;border-radius:19px;background:var(--card);border:1px solid var(--line);font-weight:800;font-size:14px;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.pill{min-height:38px;padding:0 14px;border-radius:19px;background:var(--card);border:1px solid var(--line);font-weight:800;font-size:14px;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
 .pill.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 .pill.p.on{background:var(--c);border-color:var(--c);color:#fff}
 .btn{height:42px;padding:0 18px;border-radius:21px;background:var(--ink);color:var(--bg);font-weight:800;display:inline-flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap}
@@ -64,7 +64,16 @@ textarea{height:70px;padding:10px 12px}
 .ring .c:after{content:'';position:absolute;inset:4px;border-radius:50%;background:var(--tint)}
 .ring .c span{position:relative;z-index:1}
 .ring.on{color:var(--ink)} .ring.on .c{box-shadow:0 0 0 2px var(--c)}
-.days{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:0 0 14px}
+.seg{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;background:var(--chip);border-radius:16px;padding:4px;margin:4px 0 10px}
+.seg button{height:46px;border-radius:12px;font-weight:800;font-size:15px;color:var(--muted)} .seg button.on{background:var(--card);color:var(--ink,inherit);box-shadow:var(--shadow)}
+.badge{display:inline-grid;place-items:center;min-width:20px;height:20px;border-radius:10px;background:var(--bad);color:#fff;font-size:12px;padding:0 5px}
+.tabs.sub .pill{height:34px;font-size:13px}
+@media (max-width:700px){ .tabs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none} .tabs .pill{flex:none} .chips .pill{white-space:normal;text-align:left;padding:6px 14px;line-height:1.25} }
+.li .who{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end;max-width:46%}
+.li .who .ab{height:30px;font-size:12.5px;padding:0 10px}
+@media (max-width:700px){ .seg button{font-size:13px;height:42px} .li{flex-wrap:wrap} .li .who,.li .as{max-width:100%;width:100%;justify-content:flex-start;padding-left:44px} }
+.days{display:flex;gap:6px;align-items:center;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin:0 0 14px}
+.days .pill{flex:none}
 .days .pill{height:44px;flex-direction:column;gap:0;line-height:1.05;padding:0 12px;font-size:12px}
 .days .pill b{font-size:16px}
 .plan{margin:10px 2px 4px;border-radius:16px;background:var(--card);padding:8px 12px}
@@ -538,7 +547,7 @@ function migrate2(){
   Object.assign(ST(), {starsPerDollar: ST().starsPerDollar||10, demeritCap: ST().demeritCap||15, libVersion:3});
   setTimeout(() => saveConfig('Updated chore pay'), 500);
 }
-const BUILD = 'b1794868832';
+const BUILD = 'b1794868987';
 const API_URL = 'https://script.google.com/macros/s/AKfycbyoX9RyIVAe9s1XqT2HSGd_3TQNCSMhimvJiXeCruDh_SXKNd1rlByP81FuXellq3ki/exec';
 function apiKey(){ const q = new URLSearchParams(location.search).get('key'); if (q){ localStorage.setItem('familyhub.key', q); history.replaceState(null,'',location.pathname); } return localStorage.getItem('familyhub.key') || ''; }
 function call(fn, ...args){
@@ -747,31 +756,35 @@ function nameIssues(title, room, id){
   return out;
 }
 function vChores(){
-  const tabs = [['all','Everything'],['laundry','🧺 Laundry'],['r','Suggested for ReiRei'],['e','Suggested for Ender'],['a','Grown-ups & house'],['extra','Extra jobs']];
-  const sts = [['all','Any status'],['assigned','Assigned'],['pool','Family pool'],['off','Not used']];
+  const tabs = [['all','Everyone']].concat(cfg().people.map(x=>['p:'+x.id, x.name])).concat([['pool','🙋 Family pool'],['extra','⭐ Extra jobs'],['laundry','🧺 Laundry'],['off','💤 Not used'],['sug','💡 Ideas for the kids']]);
   const sorts = [['group','How often'],['room','Room'],['az','A → Z'],['za','Z → A'],['who','Who'],['day','Day of week'],['slot','Time of day'],['points','Pay (high → low)'],['status','Status']];
   return `<div class="bar"><input id="libq" type="search" placeholder="🔍 Search chores, people or notes…" value="${esc(U.q)}" style="flex:1;min-width:220px;height:44px;border-radius:22px">
-      <label class="inl" style="font-size:13px;color:var(--muted)">Sort <select id="libsort" style="height:44px;border-radius:22px">${sorts.map(([k,l])=>`<option value="${k}" ${U.sort===k?'selected':''}>${l}</option>`).join('')}</select></label>
-      <label class="inl" style="font-size:13px;color:var(--muted)">Room <select id="libroom" style="height:44px;border-radius:22px"><option value="all">All rooms</option>${ROOMS().map(r=>`<option ${U.room===r?'selected':''}>${esc(r)}</option>`).join('')}<option value="none" ${U.room==='none'?'selected':''}>No room</option></select></label>
+      <label class="inl" style="font-size:13px;color:var(--muted)"><select id="libsort" aria-label="Sort" style="height:44px;border-radius:22px">${sorts.map(([k,l])=>`<option value="${k}" ${U.sort===k?'selected':''}>Sort: ${l}</option>`).join('')}</select></label>
+      <label class="inl" style="font-size:13px;color:var(--muted)"><select id="libroom" aria-label="Room" style="height:44px;border-radius:22px"><option value="all">All rooms</option>${ROOMS().map(r=>`<option ${U.room===r?'selected':''}>${esc(r)}</option>`).join('')}<option value="none" ${U.room==='none'?'selected':''}>No room</option></select></label>
       <button class="btn" data-a="edit" data-c="new">+ New chore</button></div>
-    <div class="tabs">${tabs.map(([k,l])=>`<button class="pill ${U.lib===k?'on':''}" data-a="lib" data-k="${k}">${l}</button>`).join('')}</div>
-    <div class="tabs">${sts.map(([k,l])=>`<button class="pill ${U.libStatus===k?'on':''}" data-a="libs" data-k="${k}">${l}</button>`).join('')}</div>
+    <div class="tabs">${tabs.map(([k,l])=>`<button class="pill ${U.lib===k?'on':''}" data-a="lib" data-k="${k}">${esc(l)}</button>`).join('')}
+      <button class="pill ${U.quick?'on':''}" style="margin-left:auto" data-a="quick">${U.quick?'✓ Quick assign on':'⚡ Quick assign'}</button></div>
     <div id="libl">${libList()}</div>`;
 }
 function libRow(c){
+  const pay = c.freq==='extra' ? `☆ ${c.points} stars` : String(c.rec)==='a' || c.freq==='asneeded' ? '' : Number(c.points) ? `${c.points} pts` : 'no pay';
+  const sug = L => String(c.rec).includes(L);
+  const line = [repeatText(c).replace(/ · (Morning|Afternoon|Evening|Anytime)$/,'').replace('Every day · school days','School days'), SLOTS[c.slot]?.[1], c.room?'📍 '+c.room:'', pay, status(c)==='off'&&(sug('r')||sug('e'))?'💡 idea for '+[sug('r')&&'ReiRei',sug('e')&&'Ender'].filter(Boolean).join(' & '):''].filter(Boolean).map(esc).join(' · ');
+  let who;
+  if (rotOf(c)) who = `<button class="ab" style="height:auto;min-height:30px;white-space:normal;text-align:left;padding:4px 10px" data-a="edit" data-c="${c.id}">🔁 ${esc(rotText(c))}</button>`;
+  else if (U.quick) who = `<span class="as">${cfg().people.map(p=>`<button ${pvx(p,'ab'+(arr(c.assign).includes(p.id)?' on':''))} data-a="assign" data-c="${c.id}" data-p="${p.id}">${esc(p.name)}</button>`).join('')}<button class="ab abpool ${isPool(c)?'on':''}" data-a="assign" data-c="${c.id}" data-p="pool">🙋 Pool</button></span>`;
+  else { const w = arr(c.assign).map(P).filter(Boolean); who = `<span class="who">${w.map(p=>`<button ${pvx(p,'ab on')} data-a="edit" data-c="${c.id}">${esc(p.name)}</button>`).join('')}${isPool(c)?`<button class="ab abpool on" data-a="edit" data-c="${c.id}">🙋 Pool</button>`:''}${!w.length&&!isPool(c)?`<button class="ab" data-a="edit" data-c="${c.id}" style="color:var(--muted)">Not used</button>`:''}</span>`; }
   return `<div class="li" style="${c.active?'':'opacity:.5'}"><span class="e">${c.emoji}</span>
-      <button class="t" data-a="edit" data-c="${c.id}">${esc(c.title)}<small>${c.room?`<span class="tag">📍 ${esc(c.room)}</span>`:''}${c.cat==='laundry'?'<span class="tag">🧺 Laundry</span>':''}${String(c.rec).includes('r')?'<span class="tag tr">ReiRei</span>':''}${String(c.rec).includes('e')?'<span class="tag te">Ender</span>':''}${String(c.rec).includes('a')?'<span class="tag ta">Grown-ups</span>':''}${esc(repeatText(c))}${c.freq==='asneeded'||String(c.rec)==='a'?'':Number(c.points)?` · ${levelName(c)} (${c.freq==='extra'?'☆ '+c.points+' stars':c.points+' pts'})`:' · 💛 No pay · just what we do'}</small></button>
-      ${rotOf(c) ? `<button class="ab" style="max-width:420px;white-space:normal;height:auto;padding:6px 12px;text-align:left" data-a="edit" data-c="${c.id}">🔁 ${esc(rotText(c))}</button>` :
-      `<span class="as">${cfg().people.map(p=>`<button ${pvx(p,'ab'+(arr(c.assign).includes(p.id)?' on':''))} data-a="assign" data-c="${c.id}" data-p="${p.id}">${esc(p.name)}</button>`).join('')}<button class="ab abpool ${isPool(c)?'on':''}" data-a="assign" data-c="${c.id}" data-p="pool">🙋 Pool</button></span>`}</div>`;
+      <button class="t" data-a="edit" data-c="${c.id}">${esc(c.title)}${c.active?'':' (paused)'}<small>${line}</small></button>${who}</div>`;
 }
 function libList(){
   const q = U.q.trim().toLowerCase();
-  let list = cfg().chores.filter(c => U.lib==='all' || (U.lib==='laundry' ? c.cat==='laundry' : U.lib==='extra' ? c.freq==='extra' : c.freq!=='extra' && String(c.rec).includes(U.lib)));
-  if (U.libStatus!=='all') list = list.filter(c => status(c)===U.libStatus);
+  const L = U.lib;
+  let list = cfg().chores.filter(c => L==='all' || (L.startsWith('p:') ? arr(c.assign).includes(L.slice(2)) : L==='pool' ? isPool(c) : L==='extra' ? c.freq==='extra' : L==='laundry' ? c.cat==='laundry' : L==='off' ? status(c)==='off' : L==='sug' ? status(c)==='off' && /[re]/.test(String(c.rec)) : true));
   if (U.room!=='all') list = list.filter(c => U.room==='none' ? !c.room : c.room===U.room);
   if (q) list = list.filter(c => [c.title, c.room, c.how, c.emoji, repeatText(c), rotText(c), arr(c.assign).map(id=>P(id)?.name||'').join(' '), isPool(c)?'pool family':'', c.cat].join(' ').toLowerCase().includes(q));
   if (!list.length) return `<div class="lib"><div class="li"><span class="hint">No chores match${q?` "${esc(U.q)}"`:''}.</span></div></div>`;
-  const head = `<p class="hint" style="margin:0 0 8px">${list.length} chore${list.length===1?'':'s'}. Tap a chore to edit it; tap a name to give it to someone.</p>`;
+  const head = `<p class="hint" style="margin:0 0 8px">${list.length} chore${list.length===1?'':'s'}. Tap a chore to change it${U.quick?'; tap a name to give it to someone or take it away':''}.</p>`;
   if (U.sort==='group'){
     const order = ['daily','weekly','monthly','after','once','asneeded','extra'], gn = {daily:'Every day',weekly:'Weekly',monthly:'Monthly',after:"After it's done",once:'One time',asneeded:'As needed',extra:'Extra jobs (bonus stars)'};
     return head + `<div class="lib">${order.map(f => { const l = list.filter(c=>c.freq===f); return l.length ? `<div class="grp">${gn[f]} <span class="hint">(${l.length})</span></div>` + l.map(libRow).join('') : ''; }).join('')}</div>`;
@@ -938,10 +951,16 @@ function vFamily(){
 }
 // ---------- grown-ups ----------
 function vParent(){
-  const tabs = [['chores','📋 Chores'],['approve','✋ Approvals'+(D.pending.length?` (${D.pending.length})`:'')],['behavior','⭐ Bonus & demerits'],['grounded','⛔ Grounded'],['rooms','📍 Rooms'],['guide','📘 How points work'],['payday','💰 Payday'],['money','🫙 Money jars'],['rewardsEdit','🎁 Rewards'],['history','📜 History'],['settings','⚙️ Settings & Google']];
+  const SECT = [['chores','📋 Chores',[['chores','All chores'],['rooms','📍 Rooms']]],
+    ['kids','👦 Kids'+(D.pending.length?` <span class="badge">${D.pending.length}</span>`:''),[['approve','✋ Approvals'+(D.pending.length?` (${D.pending.length})`:'')],['behavior','⭐ Bonus & demerits'],['grounded','⛔ Grounded']]],
+    ['money','💰 Money',[['payday','Payday'],['money','Money jars'],['rewardsEdit','Rewards'],['history','History']]],
+    ['setup','⚙️ Settings',[['settings','Settings'],['guide','How points work']]]];
+  const sec = SECT.find(x => x[2].some(([t]) => t===U.ptab)) || SECT[0];
+  const tabs = sec[2];
   const body = {chores:vChores, rooms:pRooms, guide:pGuide, grounded:pGrounded, approve:pApprove, behavior:pBehavior, payday:pPayday, money:pMoney, rewardsEdit:pRewards, history:pHistory, settings:pSettings}[U.ptab]();
   return `<div class="bar"><h1 class="title">Grown-ups</h1><span class="hint">Locks again after 5 minutes.</span><span style="margin-left:auto;display:flex;gap:8px"><button class="btn light sm" data-a="refresh">↻ Refresh</button><button class="btn sm" data-a="lock">Lock</button></span></div>
-    <div class="tabs">${tabs.map(([t,l])=>`<button class="pill ${U.ptab===t?'on':''}" data-a="ptab" data-t="${t}">${l}</button>`).join('')}</div>${body}`;
+    <div class="seg">${SECT.map(([k,l,sub])=>`<button class="${sec[0]===k?'on':''}" data-a="ptab" data-t="${sub[0][0]}">${l}</button>`).join('')}</div>
+    ${tabs.length>1?`<div class="tabs sub">${tabs.map(([t,l])=>`<button class="pill ${U.ptab===t?'on':''}" data-a="ptab" data-t="${t}">${l}</button>`).join('')}</div>`:''}${body}`;
 }
 function pApprove(){
   if (!D.pending.length) return `<div class="box" style="margin-top:0"><p class="hint">Nothing waiting. Extra jobs and reward requests show up here.</p></div>`;
@@ -1100,7 +1119,7 @@ const A = {
     if (d.ok==='1' && e.type==='redeem'){ const r = cfg().rewards.find(x=>x.id===e.ref); if (r && num(r.cash)) log({kid:e.kid, type:'jar', jar:'spend', money:num(r.cash), title:'Stars traded for cash', ref:e.id}); }
     render(); }),
   ptab: d => { U.ptab = d.t; },
-  openroom: d => { U.ptab = 'chores'; U.room = d.r; U.sort = 'group'; U.lib = 'all'; U.libStatus = 'all'; U.q = ''; },
+  openroom: d => { U.ptab = 'chores'; U.room = d.r; U.sort = 'group'; U.lib = 'all'; U.q = ''; },
   roomadd: () => needParent(() => { const n = $('#newroom').value.trim(); if (!n) return toast('Type a room name'); if (ROOMS().some(r=>r.toLowerCase()===n.toLowerCase())) return toast('That room is already there'); ST().rooms = ROOMS().concat([n]); saveConfig('Room added'); render(); }),
   roomren: d => needParent(() => { const R = ROOMS(), old = R[Number(d.i)], n = (prompt('New name for '+old, old)||'').trim(); if (!n || n===old) return; R[Number(d.i)] = n; ST().rooms = R; cfg().chores.forEach(c => { if (c.room===old) c.room = n; }); saveConfig('Room renamed'); render(); }),
   roomdel: d => needParent(() => { const R = ROOMS(), r = R[Number(d.i)], n = cfg().chores.filter(c=>c.room===r).length; if (!confirm(`Remove ${r}?${n?` Its ${n} chore${n===1?'':'s'} stay, just without a room.`:''}`)) return; ST().rooms = R.filter(x=>x!==r); cfg().chores.forEach(c => { if (c.room===r) c.room = ''; }); saveConfig('Room removed'); render(); }),
@@ -1130,7 +1149,7 @@ const A = {
   match: d => needParent(() => { const m = Math.round(D.jars[d.p].save*(Number(ST().matchPct)||0))/100; if (m<.01) return toast('Nothing in Save yet');
     log({kid:d.p, type:'jar', jar:'save', money:m, title:`Parent match ${ST().matchPct}%`, by:'parent'}); toast(`Save jar grew by ${money(m)}!`); confetti(col(P(d.p))); render(); }),
   goal: d => needParent(() => { const k = P(d.p); k.goal = $('#goal_'+d.p).value; k.goalCost = $('#goalc_'+d.p).value; saveConfig('Goal saved'); render(); }),
-  lib: d => { U.lib = d.k; }, libs: d => { U.libStatus = d.k; },
+  lib: d => { U.lib = d.k; }, libs: d => { U.libStatus = d.k; }, quick: () => { U.quick = !U.quick; },
   assign: d => needParent(() => { const c = cfg().chores.find(x=>x.id===d.c); if (rotOf(c)) return editChore(c.id);
     if (d.p==='pool'){ const was = isPool(c); c.assign = []; c.pool = !was; }
     else { c.assign = arr(c.assign).includes(d.p) ? arr(c.assign).filter(x=>x!==d.p) : arr(c.assign).concat(d.p); if (c.assign.length) c.pool = false; }
