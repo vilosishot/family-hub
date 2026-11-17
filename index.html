@@ -72,6 +72,8 @@ textarea{height:70px;padding:10px 12px}
 .li .who{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end;max-width:46%}
 .li .who .ab{height:30px;font-size:12.5px;padding:0 10px}
 @media (max-width:700px){ .seg button{font-size:13px;height:42px} .li{flex-wrap:wrap} .li .who,.li .as{max-width:100%;width:100%;justify-content:flex-start;padding-left:44px} }
+#syncwarn{position:fixed;left:50%;transform:translateX(-50%);bottom:14px;z-index:60;background:#b4472b;color:#fff;font-weight:800;font-size:14px;padding:10px 12px 10px 16px;border-radius:16px;box-shadow:0 6px 20px rgba(0,0,0,.25);display:flex;gap:10px;align-items:center;max-width:94vw}
+#syncwarn button{background:#fff;color:#b4472b;border-radius:10px;padding:6px 12px;font-weight:800}
 .days{display:flex;gap:6px;align-items:center;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin:0 0 14px}
 .days .pill{flex:none}
 .days .pill{height:44px;flex-direction:column;gap:0;line-height:1.05;padding:0 12px;font-size:12px}
@@ -527,7 +529,15 @@ const tierFor = pct => { const t = [...ST().tiers].sort((a,b)=>b.min-a.min).find
 function payFor(p, ws){ const w = weekStats(p, ws), base = baseAllowance(p, addDays(ws,6)), tier = w.possible ? tierFor(w.pct) : 0; return {...w, base, tier, pay: Math.round(base*tier/100*4)/4}; }
 
 // ---------- saving & Google ----------
-function syncDot(s){ const el = $('#sync'); el.className = 'sync '+(s||''); el.title = {ok:'Saved to Google',busy:'Saving…',err:"Can't reach Google — will retry",'':'Saved on this device only'}[s||'']; }
+function syncWarn(){
+  let el = $('#syncwarn'); if (!el){ el = document.createElement('div'); el.id = 'syncwarn'; document.body.appendChild(el); }
+  const old = S.outbox.concat(S.cfgOut).filter(e => Date.now() - new Date(e.ts || 0) > 120000).length;
+  const notLinked = remote==='local' && location.protocol.startsWith('http');
+  el.innerHTML = notLinked ? `⚠️ This device isn't connected to Google, so nothing here is shared. <button data-a="linkdev">Connect</button>`
+    : old ? `⚠️ ${S.outbox.length + S.cfgOut.length} change${S.outbox.length+S.cfgOut.length===1?'':'s'} on this device haven't reached Google yet. <button data-a="sendnow">Send now</button>` : '';
+  el.style.display = el.innerHTML ? '' : 'none';
+}
+function syncDot(s){ setTimeout(syncWarn, 0); const el = $('#sync'); el.className = 'sync '+(s||''); el.title = {ok:'Saved to Google',busy:'Saving…',err:"Can't reach Google — will retry",'':'Saved on this device only'}[s||'']; }
 function store(){ try { localStorage.setItem(LS, JSON.stringify({config:S.config, base:S.base, cfgOut:S.cfgOut, log:S.log, outbox:S.outbox})); } catch(e){} }
 function normalize(c){
   const d = JSON.parse(JSON.stringify(DEFAULTS)); c = c || d;
@@ -547,17 +557,20 @@ function migrate2(){
   Object.assign(ST(), {starsPerDollar: ST().starsPerDollar||10, demeritCap: ST().demeritCap||15, libVersion:3});
   setTimeout(() => saveConfig('Updated chore pay'), 500);
 }
-const BUILD = 'b1794868987';
+const BUILD = 'b1794875055';
 const API_URL = 'https://script.google.com/macros/s/AKfycbyoX9RyIVAe9s1XqT2HSGd_3TQNCSMhimvJiXeCruDh_SXKNd1rlByP81FuXellq3ki/exec';
 function apiKey(){ const q = new URLSearchParams(location.search).get('key'); if (q){ localStorage.setItem('familyhub.key', q); history.replaceState(null,'',location.pathname); } return localStorage.getItem('familyhub.key') || ''; }
 function call(fn, ...args){
-  if (remote === 'gas') return new Promise((res, rej) => google.script.run.withSuccessHandler(res).withFailureHandler(rej)[fn](...args));
-  if (remote === 'url') return fetch(API_URL, {method:'POST', body: JSON.stringify({key: apiKey(), fn, args})}).then(r => r.json()).then(j => { if (j && j.error) throw new Error(j.error); return j.result; });
+  if (remote === 'url'){ const ac = new AbortController(), tm = setTimeout(() => ac.abort(), 60000);
+    return fetch(API_URL, {method:'POST', body: JSON.stringify({key: apiKey(), fn, args}), signal: ac.signal}).then(r => r.json()).then(j => { if (j && j.error) throw new Error(j.error); return j.result; }).finally(() => clearTimeout(tm)); }
+  if (remote === 'gas') return Promise.race([new Promise((res, rej) => google.script.run.withSuccessHandler(res).withFailureHandler(rej)[fn](...args)), new Promise((_, rej) => setTimeout(() => rej(new Error('timed out')), 60000))]);
   return Promise.reject(new Error('local'));
 }
 let flushing = false;
+let flushStart = 0;
 async function flush(){
-  if (remote==='local' || flushing) return; if (!S.outbox.length){ syncDot('ok'); return; }
+  if (flushing && Date.now() - flushStart > 90000) flushing = false;      // a send that never came back: try again
+  if (remote==='local' || flushing) return; flushStart = Date.now(); if (!S.outbox.length){ syncDot('ok'); return; }
   flushing = true; syncDot('busy'); const batch = S.outbox.slice(0,60);
   try { await call('apiAppend', batch); const ids = new Set(batch.map(e=>e.id)); S.outbox = S.outbox.filter(e=>!ids.has(e.id)); store(); syncDot(S.outbox.length?'busy':'ok'); }
   catch(e){ syncDot('err'); }
@@ -624,13 +637,15 @@ function saveConfig(msg){
   D = derive();
   if (!S.base) S.base = clone(S.config);
   const p = diffConfig(S.base, S.config);
-  if (p){ S.cfgOut.push(p); applyPatch(S.base, p); }
+  if (p){ p.ts = new Date().toISOString(); S.cfgOut.push(p); applyPatch(S.base, p); }
   store();
   if (remote==='local'){ toast(msg||'Saved'); return; }
   flushCfg(msg);
 }
+let cfgStart = 0;
 async function flushCfg(msg){
-  if (cfgFlushing || remote==='local') return; if (!S.cfgOut.length){ if (msg) toast(msg); return; }
+  if (cfgFlushing && Date.now() - cfgStart > 90000) cfgFlushing = false;
+  if (cfgFlushing || remote==='local') return; cfgStart = Date.now(); if (!S.cfgOut.length){ if (msg) toast(msg); return; }
   cfgFlushing = true; syncDot('busy');
   try { while (S.cfgOut.length){ await call('apiPatchConfig', S.cfgOut[0]); S.cfgOut.shift(); store(); } syncDot(S.outbox.length?'busy':'ok'); if (msg) toast(msg); }
   catch(e){ syncDot('err'); if (msg) toast("Saved here. It will go to Google when the connection is back."); }
@@ -1150,6 +1165,8 @@ const A = {
     log({kid:d.p, type:'jar', jar:'save', money:m, title:`Parent match ${ST().matchPct}%`, by:'parent'}); toast(`Save jar grew by ${money(m)}!`); confetti(col(P(d.p))); render(); }),
   goal: d => needParent(() => { const k = P(d.p); k.goal = $('#goal_'+d.p).value; k.goalCost = $('#goalc_'+d.p).value; saveConfig('Goal saved'); render(); }),
   lib: d => { U.lib = d.k; }, libs: d => { U.libStatus = d.k; }, quick: () => { U.quick = !U.quick; },
+  sendnow: () => { flushing = false; cfgFlushing = false; flush(); flushCfg(); pull(); toast('Sending…'); return 'skip'; },
+  linkdev: () => { const k = (prompt('Family key (from the setup link)')||'').trim(); if (!k) return 'skip'; localStorage.setItem('familyhub.key', k); location.reload(); return 'skip'; },
   assign: d => needParent(() => { const c = cfg().chores.find(x=>x.id===d.c); if (rotOf(c)) return editChore(c.id);
     if (d.p==='pool'){ const was = isPool(c); c.assign = []; c.pool = !was; }
     else { c.assign = arr(c.assign).includes(d.p) ? arr(c.assign).filter(x=>x!==d.p) : arr(c.assign).concat(d.p); if (c.assign.length) c.pool = false; }
@@ -1264,7 +1281,7 @@ addEventListener('resize', () => { clearTimeout(A._r); A._r = setTimeout(() => {
   setInterval(() => { if (TODAY()!==lastDay){ lastDay = TODAY(); U.day = now().getDay(); U.off = 0; } if (U.view==='parent' && !isParent()) U.view = 'today'; if (!busy()) render(); }, 30000);
   setInterval(() => { if (!busy()) pull(); }, 45000);
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible'){ flush(); pull(); } });
-  setInterval(() => { flush(); flushCfg(); }, 20000);
+  setInterval(() => { flush(); flushCfg(); syncWarn(); }, 20000);
 })();
 </script>
 </body>
