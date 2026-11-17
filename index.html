@@ -532,8 +532,8 @@ function payFor(p, ws){ const w = weekStats(p, ws), base = baseAllowance(p, addD
 function syncWarn(){
   let el = $('#syncwarn'); if (!el){ el = document.createElement('div'); el.id = 'syncwarn'; document.body.appendChild(el); }
   const old = S.outbox.concat(S.cfgOut).filter(e => Date.now() - new Date(e.ts || 0) > 120000).length;
-  const notLinked = remote==='local' && location.protocol.startsWith('http');
-  el.innerHTML = notLinked ? `⚠️ This device isn't connected to Google, so nothing here is shared. <button data-a="linkdev">Connect</button>`
+  const notLinked = (remote==='local' && location.protocol.startsWith('http')) || /family key/i.test(S.lastErr||'');
+  el.innerHTML = notLinked ? `⚠️ This device ${/family key/i.test(S.lastErr||'')?'has the wrong family key':"isn't connected to Google"}, so ${S.outbox.length?S.outbox.length+' check-offs here are':'nothing here is'} not shared. Open the setup link on this device, or <button data-a="linkdev">Enter the key</button>`
     : old ? `⚠️ ${S.outbox.length + S.cfgOut.length} change${S.outbox.length+S.cfgOut.length===1?'':'s'} on this device haven't reached Google yet.${S.lastErr?` <small style="opacity:.85;font-weight:600">(${esc(S.lastErr.slice(0,80))})</small>`:''} <button data-a="sendnow">Send now</button>` : '';
   el.style.display = el.innerHTML ? '' : 'none';
 }
@@ -557,7 +557,7 @@ function migrate2(){
   Object.assign(ST(), {starsPerDollar: ST().starsPerDollar||10, demeritCap: ST().demeritCap||15, libVersion:3});
   setTimeout(() => saveConfig('Updated chore pay'), 500);
 }
-const BUILD = 'b1794883666';
+const BUILD = 'b1794883764';
 const API_URL = 'https://script.google.com/macros/s/AKfycbyoX9RyIVAe9s1XqT2HSGd_3TQNCSMhimvJiXeCruDh_SXKNd1rlByP81FuXellq3ki/exec';
 function apiKey(){ const q = new URLSearchParams(location.search).get('key'); if (q){ localStorage.setItem('familyhub.key', q); history.replaceState(null,'',location.pathname); } return localStorage.getItem('familyhub.key') || ''; }
 function call(fn, ...args){
@@ -609,7 +609,7 @@ async function pull(first){
     if (!busy()) render();
     flush();
     if (DV.lastChoreSync !== TODAY()){ D = derive(); call('apiSyncChores', choreEvents()).then(()=>{ DV.lastChoreSync = TODAY(); saveDev(); }).catch(()=>{}); }
-  } catch(e){ syncDot('err'); }
+  } catch(e){ S.lastErr = String(e.message||e); syncDot('err'); }
 }
 function log(ev){
   const e = Object.assign({id:uid(), ts:new Date().toISOString(), date:TODAY(), kid:'', type:'', ref:'', title:'', pts:'', stars:'', money:'', jar:'', status:'', note:'', by:''}, ev);
