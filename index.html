@@ -419,7 +419,7 @@ const arr = v => Array.isArray(v) ? v : (v===''||v==null ? [] : String(v).split(
 const now = () => new Date(), TODAY = () => ymd(now());
 const narrow = () => matchMedia('(max-width:760px)').matches;
 function ageOn(b, d){ if (!b) return null; const x = pd(b); let a = d.getFullYear()-x.getFullYear(); if (d.getMonth()<x.getMonth() || (d.getMonth()===x.getMonth() && d.getDate()<x.getDate())) a--; return a; }
-function toast(m){ $('#toast').innerHTML = `<div class="toast">${esc(m)}</div>`; clearTimeout(toast.t); toast.t = setTimeout(()=>$('#toast').innerHTML='',2600); }
+function toast(m, ms){ $('#toast').innerHTML = `<div class="toast">${esc(m)}</div>`; clearTimeout(toast.t); toast.t = setTimeout(()=>$('#toast').innerHTML='', ms||2600); }
 function modal(h){ $('#modal').innerHTML = h ? `<div class="scrim" data-a="close" data-self="1"><div class="modal">${h}</div></div>` : ''; }
 function confetti(c){ if (matchMedia('(prefers-reduced-motion: reduce)').matches) return; const cv=$('#cf'),x=cv.getContext('2d');cv.width=innerWidth;cv.height=innerHeight;const cs=[c,'#ffd23f','#7cc6a4','#f3a683','#fff'];const Q=Array.from({length:130},()=>({x:innerWidth/2,y:innerHeight*.5,vx:(Math.random()-.5)*15,vy:-Math.random()*15-4,s:Math.random()*8+4,r:0,c:cs[Math.random()*5|0]}));let f=0;(function s(){x.clearRect(0,0,cv.width,cv.height);for(const p of Q){p.vy+=.45;p.x+=p.vx;p.y+=p.vy;p.r+=.2;x.save();x.translate(p.x,p.y);x.rotate(p.r);x.fillStyle=p.c;x.fillRect(-p.s/2,-p.s/3,p.s,p.s*.6);x.restore();}if(++f<100)requestAnimationFrame(s);else x.clearRect(0,0,cv.width,cv.height);})(); }
 let actx; function blip(up=true){ if (!ST().sound) return; try { actx = actx || new (window.AudioContext||window.webkitAudioContext)(); const o=actx.createOscillator(), g=actx.createGain(), t=actx.currentTime; o.frequency.setValueAtTime(up?660:440,t); o.frequency.exponentialRampToValueAtTime(up?990:330,t+.12); g.gain.setValueAtTime(.1,t); g.gain.exponentialRampToValueAtTime(.001,t+.25); o.connect(g).connect(actx.destination); o.start(t); o.stop(t+.26);} catch(e){} }
@@ -534,7 +534,7 @@ function syncWarn(){
   const old = S.outbox.concat(S.cfgOut).filter(e => Date.now() - new Date(e.ts || 0) > 120000).length;
   const notLinked = remote==='local' && location.protocol.startsWith('http');
   el.innerHTML = notLinked ? `⚠️ This device isn't connected to Google, so nothing here is shared. <button data-a="linkdev">Connect</button>`
-    : old ? `⚠️ ${S.outbox.length + S.cfgOut.length} change${S.outbox.length+S.cfgOut.length===1?'':'s'} on this device haven't reached Google yet. <button data-a="sendnow">Send now</button>` : '';
+    : old ? `⚠️ ${S.outbox.length + S.cfgOut.length} change${S.outbox.length+S.cfgOut.length===1?'':'s'} on this device haven't reached Google yet.${S.lastErr?` <small style="opacity:.85;font-weight:600">(${esc(S.lastErr.slice(0,80))})</small>`:''} <button data-a="sendnow">Send now</button>` : '';
   el.style.display = el.innerHTML ? '' : 'none';
 }
 function syncDot(s){ setTimeout(syncWarn, 0); const el = $('#sync'); el.className = 'sync '+(s||''); el.title = {ok:'Saved to Google',busy:'Saving…',err:"Can't reach Google — will retry",'':'Saved on this device only'}[s||'']; }
@@ -557,7 +557,7 @@ function migrate2(){
   Object.assign(ST(), {starsPerDollar: ST().starsPerDollar||10, demeritCap: ST().demeritCap||15, libVersion:3});
   setTimeout(() => saveConfig('Updated chore pay'), 500);
 }
-const BUILD = 'b1794875055';
+const BUILD = 'b1794883666';
 const API_URL = 'https://script.google.com/macros/s/AKfycbyoX9RyIVAe9s1XqT2HSGd_3TQNCSMhimvJiXeCruDh_SXKNd1rlByP81FuXellq3ki/exec';
 function apiKey(){ const q = new URLSearchParams(location.search).get('key'); if (q){ localStorage.setItem('familyhub.key', q); history.replaceState(null,'',location.pathname); } return localStorage.getItem('familyhub.key') || ''; }
 function call(fn, ...args){
@@ -567,13 +567,18 @@ function call(fn, ...args){
   return Promise.reject(new Error('local'));
 }
 let flushing = false;
-let flushStart = 0;
+let flushStart = 0, lastReport = 0;
+function report(fn, e, n){ if (Date.now() - lastReport < 300000) return; lastReport = Date.now();
+  call('apiReportError', {fn, msg:String(e && e.message || e), n, outbox:S.outbox.length, cfgOut:S.cfgOut.length, build:BUILD, mode:remote, ua:navigator.userAgent.slice(0,120), online:navigator.onLine}).catch(()=>{}); }
 async function flush(){
   if (flushing && Date.now() - flushStart > 90000) flushing = false;      // a send that never came back: try again
   if (remote==='local' || flushing) return; flushStart = Date.now(); if (!S.outbox.length){ syncDot('ok'); return; }
-  flushing = true; syncDot('busy'); const batch = S.outbox.slice(0,60);
-  try { await call('apiAppend', batch); const ids = new Set(batch.map(e=>e.id)); S.outbox = S.outbox.filter(e=>!ids.has(e.id)); store(); syncDot(S.outbox.length?'busy':'ok'); }
-  catch(e){ syncDot('err'); }
+  flushing = true; syncDot('busy'); const batch = S.outbox.slice(0,25);
+  const sent = ids => { S.outbox = S.outbox.filter(e=>!ids.has(e.id)); store(); };
+  try { await call('apiAppend', batch); sent(new Set(batch.map(e=>e.id))); S.lastErr = ''; syncDot(S.outbox.length?'busy':'ok'); }
+  catch(e){ S.lastErr = String(e.message||e); syncDot('err'); report('apiAppend', e, batch.length);
+    if (batch.length > 1) for (const r of batch){ try { await call('apiAppend', [r]); sent(new Set([r.id])); } catch(x){ r.fails = (r.fails||0)+1; if (r.fails >= 5 && !/network|fetch|abort|timed out/i.test(String(x.message||x))){ (S.dead = S.dead||[]).push(r); sent(new Set([r.id])); } } }
+    syncDot(S.outbox.length?'err':'ok'); }
   flushing = false; if (S.outbox.length && !$('#sync').classList.contains('err')) setTimeout(flush, 400);
 }
 async function pull(first){
@@ -647,8 +652,10 @@ async function flushCfg(msg){
   if (cfgFlushing && Date.now() - cfgStart > 90000) cfgFlushing = false;
   if (cfgFlushing || remote==='local') return; cfgStart = Date.now(); if (!S.cfgOut.length){ if (msg) toast(msg); return; }
   cfgFlushing = true; syncDot('busy');
-  try { while (S.cfgOut.length){ await call('apiPatchConfig', S.cfgOut[0]); S.cfgOut.shift(); store(); } syncDot(S.outbox.length?'busy':'ok'); if (msg) toast(msg); }
-  catch(e){ syncDot('err'); if (msg) toast("Saved here. It will go to Google when the connection is back."); }
+  try { while (S.cfgOut.length){ await call('apiPatchConfig', S.cfgOut[0]); S.cfgOut.shift(); store(); } S.lastErr = ''; syncDot(S.outbox.length?'busy':'ok'); if (msg) toast(msg); }
+  catch(e){ const m = String(e.message||e); S.lastErr = m; syncDot('err'); report('apiPatchConfig', e, S.cfgOut.length);
+    const p = S.cfgOut[0]; if (p && !/network|fetch|abort|timed out/i.test(m)){ p.fails = (p.fails||0)+1; if (p.fails >= 3){ S.cfgOut.shift(); store(); toast("One change couldn't be saved to Google and was skipped: "+m); pull(); } }
+    if (msg) toast("Saved here. It will go to Google when the connection is back."); }
   cfgFlushing = false;
 }
 /** The next 4 weeks of non-daily chores, for the Family Hub calendar. */
@@ -1165,7 +1172,9 @@ const A = {
     log({kid:d.p, type:'jar', jar:'save', money:m, title:`Parent match ${ST().matchPct}%`, by:'parent'}); toast(`Save jar grew by ${money(m)}!`); confetti(col(P(d.p))); render(); }),
   goal: d => needParent(() => { const k = P(d.p); k.goal = $('#goal_'+d.p).value; k.goalCost = $('#goalc_'+d.p).value; saveConfig('Goal saved'); render(); }),
   lib: d => { U.lib = d.k; }, libs: d => { U.libStatus = d.k; }, quick: () => { U.quick = !U.quick; },
-  sendnow: () => { flushing = false; cfgFlushing = false; flush(); flushCfg(); pull(); toast('Sending…'); return 'skip'; },
+  sendnow: async () => { flushing = false; cfgFlushing = false; lastReport = 0; toast('Sending…');
+    await flush(); await flushCfg(); syncWarn(); const left = S.outbox.length + S.cfgOut.length;
+    toast(left ? `Still ${left} waiting. Google said: ${S.lastErr || 'no answer'}` : 'All sent ✓', 8000); pull(); return 'skip'; },
   linkdev: () => { const k = (prompt('Family key (from the setup link)')||'').trim(); if (!k) return 'skip'; localStorage.setItem('familyhub.key', k); location.reload(); return 'skip'; },
   assign: d => needParent(() => { const c = cfg().chores.find(x=>x.id===d.c); if (rotOf(c)) return editChore(c.id);
     if (d.p==='pool'){ const was = isPool(c); c.assign = []; c.pool = !was; }
